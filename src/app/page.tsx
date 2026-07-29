@@ -30,6 +30,33 @@ function loadYouTubeApi(): Promise<void> {
   });
 }
 
+function setHighestQuality(target: any) {
+  const levels: string[] = target.getAvailableQualityLevels?.() ?? [];
+  target.setPlaybackQuality(levels[0] ?? "hd2160");
+}
+
+function extractYouTubeId(embedUrl: string) {
+  return embedUrl.split("/embed/")[1]?.split("?")[0] ?? embedUrl;
+}
+
+const qualityLabels: Record<string, string> = {
+  highres: "4K+",
+  hd2160: "2160p",
+  hd1440: "1440p",
+  hd1080: "1080p",
+  hd720: "720p",
+  large: "480p",
+  medium: "360p",
+  small: "240p",
+  tiny: "144p",
+  auto: "Auto",
+  default: "Auto",
+};
+
+function qualityLabel(level: string) {
+  return qualityLabels[level] ?? level;
+}
+
 function formatVideoTime(seconds: number) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
   const m = Math.floor(seconds / 60);
@@ -181,12 +208,16 @@ function useVideoPanel(elementId: string, videoId: string) {
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(100);
   const [muted, setMuted] = useState(true);
+  const [quality, setQuality] = useState("auto");
+  const [availableQualities, setAvailableQualities] = useState<string[]>([]);
   const playerRef = useRef<any>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const userPickedQuality = useRef(false);
 
   function start() {
     setPlaying(true);
     setPaused(true);
+    userPickedQuality.current = false;
     loadYouTubeApi().then(() => {
       playerRef.current = new window.YT.Player(elementId, {
         width: "1920",
@@ -206,7 +237,8 @@ function useVideoPanel(elementId: string, videoId: string) {
         },
         events: {
           onReady: (e: any) => {
-            e.target.setPlaybackQuality("hd1080");
+            setAvailableQualities(e.target.getAvailableQualityLevels?.() ?? []);
+            setHighestQuality(e.target);
             e.target.playVideo();
             setDuration(e.target.getDuration());
             setVolume(e.target.getVolume());
@@ -221,9 +253,12 @@ function useVideoPanel(elementId: string, videoId: string) {
           },
           onStateChange: (e: any) => {
             setPaused(e.data !== window.YT.PlayerState.PLAYING);
-            if (e.data === window.YT.PlayerState.PLAYING) {
-              e.target.setPlaybackQuality("hd1080");
+            if (e.data === window.YT.PlayerState.PLAYING && !userPickedQuality.current) {
+              setHighestQuality(e.target);
             }
+          },
+          onPlaybackQualityChange: (e: any) => {
+            setQuality(e.data);
           },
         },
       });
@@ -241,6 +276,16 @@ function useVideoPanel(elementId: string, videoId: string) {
     setPaused(true);
     setCurrentTime(0);
     setDuration(0);
+    setQuality("auto");
+    setAvailableQualities([]);
+    userPickedQuality.current = false;
+  }
+
+  function changeQuality(e: ChangeEvent<HTMLSelectElement>) {
+    const level = e.target.value;
+    userPickedQuality.current = level !== "default";
+    playerRef.current?.setPlaybackQuality(level);
+    setQuality(level === "default" ? "auto" : level);
   }
 
   function togglePlayPause() {
@@ -297,12 +342,15 @@ function useVideoPanel(elementId: string, videoId: string) {
     duration,
     volume,
     muted,
+    quality,
+    availableQualities,
     start,
     stop,
     togglePlayPause,
     seek,
     toggleMute,
     handleVolume,
+    changeQuality,
   };
 }
 
@@ -386,6 +434,21 @@ function VideoControls({ panel }: { panel: VideoPanel }) {
         onChange={panel.handleVolume}
         aria-label="Volume"
       />
+      {panel.availableQualities.length > 0 && (
+        <select
+          className="video-quality-select"
+          value={panel.quality}
+          onChange={panel.changeQuality}
+          aria-label="Video quality"
+        >
+          <option value="default">Auto</option>
+          {panel.availableQualities.map((level) => (
+            <option key={level} value={level}>
+              {qualityLabel(level)}
+            </option>
+          ))}
+        </select>
+      )}
     </div>
   );
 }
@@ -528,13 +591,14 @@ export default function Home() {
   const lionCopyRef = useRef<HTMLDivElement>(null);
   const batikCopyRef = useRef<HTMLDivElement>(null);
   const indianCopyRef = useRef<HTMLDivElement>(null);
+  const tasteCopyRef = useRef<HTMLDivElement>(null);
   const [openFaq, setOpenFaq] = useState<string | null>(faqItems[0].question);
   const loaderRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLSpanElement>(null);
   const heroBgRef = useRef<HTMLDivElement>(null);
   const tierCardRef = useRef<HTMLDivElement>(null);
   const filmModalRef = useRef<HTMLDialogElement>(null);
-  const filmIframeRef = useRef<HTMLIFrameElement>(null);
+  const filmPlayerRef = useRef<any>(null);
   const filmSrc = "https://www.youtube.com/embed/8V7czbc0kxg";
   const destinationVideos: Record<string, string> = {
     "Kuala Lumpur": "https://www.youtube.com/embed/cvT7CyFJ76I",
@@ -544,10 +608,32 @@ export default function Home() {
   };
 
   function playFilm(src: string) {
-    if (filmIframeRef.current) {
-      filmIframeRef.current.src = `${src}?autoplay=1`;
-    }
     filmModalRef.current?.showModal();
+    loadYouTubeApi().then(() => {
+      filmPlayerRef.current?.destroy?.();
+      filmPlayerRef.current = new window.YT.Player("film-player", {
+        width: "1920",
+        height: "1080",
+        videoId: extractYouTubeId(src),
+        playerVars: {
+          autoplay: 1,
+          modestbranding: 1,
+          rel: 0,
+          playsinline: 1,
+        },
+        events: {
+          onReady: (e: any) => {
+            setHighestQuality(e.target);
+            e.target.playVideo();
+          },
+          onStateChange: (e: any) => {
+            if (e.data === window.YT.PlayerState.PLAYING) {
+              setHighestQuality(e.target);
+            }
+          },
+        },
+      });
+    });
   }
 
   useEffect(() => {
@@ -561,6 +647,10 @@ export default function Home() {
   useEffect(() => {
     indianCopyRef.current?.classList.toggle("is-hidden", indian.playing);
   }, [indian.playing]);
+
+  useEffect(() => {
+    tasteCopyRef.current?.classList.toggle("is-hidden", taste.playing);
+  }, [taste.playing]);
 
   useEffect(() => {
     const onLoad = () =>
@@ -619,7 +709,8 @@ export default function Home() {
       if (e.target === filmModal) filmModal?.close();
     };
     const onFilmClose = () => {
-      if (filmIframeRef.current) filmIframeRef.current.src = "";
+      filmPlayerRef.current?.destroy?.();
+      filmPlayerRef.current = null;
     };
     filmModal?.addEventListener("click", onFilmBackdropClick);
     filmModal?.addEventListener("close", onFilmClose);
@@ -864,8 +955,15 @@ export default function Home() {
           {indian.playing && <VideoControls panel={indian} />}
         </section>
 
-        <section className="taste section-light" id="taste" data-nav="light">
-          <div className="section-heading centered reveal">
+        <section className={`taste section-light${taste.playing ? " is-playing" : ""}`} id="taste" data-nav="light">
+          {taste.playing && (
+            <div className="taste-bg-video" aria-hidden="true">
+              <VideoStage panel={taste} />
+              <div className="taste-video-mask top" />
+              <div className="taste-video-mask bottom" />
+            </div>
+          )}
+          <div className="section-heading centered reveal" ref={tasteCopyRef}>
             <p className="eyebrow">The Taste of Malaysia</p>
             <h2>
               Discover Malaysia
@@ -877,33 +975,17 @@ export default function Home() {
               favourites, hidden cafés, and iconic eateries. All with
               exclusive Traveloop dining privileges.
             </p>
+            <button
+              type="button"
+              className="play-video-btn on-light"
+              onClick={taste.start}
+              aria-label="Play a taste of Malaysia video"
+            >
+              <span className="play-video-icon">▶</span>
+              Play Video
+            </button>
           </div>
-
-          <div className="taste-video reveal">
-            <div className="taste-video-frame">
-              {!taste.playing ? (
-                <button
-                  type="button"
-                  className="taste-video-tile"
-                  style={{
-                    backgroundImage: `url('https://img.youtube.com/vi/${tasteVideoId}/maxresdefault.jpg')`,
-                  }}
-                  onClick={taste.start}
-                  aria-label="Watch a taste of Malaysia"
-                >
-                  <span className="taste-video-play">▶</span>
-                  <span className="taste-video-label">Watch a taste of Malaysia</span>
-                </button>
-              ) : (
-                <>
-                  <div className="taste-video-embed">
-                    <VideoStage panel={taste} />
-                  </div>
-                  <VideoControls panel={taste} />
-                </>
-              )}
-            </div>
-          </div>
+          {taste.playing && <VideoControls panel={taste} />}
         </section>
 
         <section className="why section-light" id="why" data-nav="light">
@@ -1193,14 +1275,7 @@ export default function Home() {
 
       <dialog className="modal" ref={filmModalRef}>
         <div className="film-video">
-          <iframe
-            ref={filmIframeRef}
-            width="100%"
-            height="100%"
-            title="Traveloop Film"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
+          <div id="film-player" />
         </div>
       </dialog>
     </>

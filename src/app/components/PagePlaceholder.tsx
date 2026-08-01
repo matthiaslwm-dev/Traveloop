@@ -11,7 +11,7 @@ export default function PagePlaceholder({
 }) {
   return (
     <>
-      <Navbar />
+      <Navbar forceScrolled />
       <main>
         <section className="arrival section-light" style={{ minHeight: "70svh" }}>
           <div className="section-heading centered">

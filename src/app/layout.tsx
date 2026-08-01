@@ -22,6 +22,7 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://traveloop.my"),
   title: "Traveloop — Experience Malaysia",
   description: "An immersive concept homepage for Traveloop Malaysia.",
 };

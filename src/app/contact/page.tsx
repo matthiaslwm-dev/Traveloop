@@ -132,7 +132,7 @@ export default function ContactPage() {
                   </span>
                   <span className="contact-card-body">
                     <strong>Based in</strong>
-                    <span>Kuala Lumpur, Malaysia</span>
+                    <span>Penang, Malaysia</span>
                   </span>
                 </div>
 

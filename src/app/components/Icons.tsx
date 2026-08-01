@@ -138,6 +138,9 @@ export function Icon({ name }: { name: string }) {
         <path d="M3.5 6.5 12 13l8.5-6.5" />
       </>
     ),
+    phone: (
+      <path d="M4.5 3.5h3.2l1.6 4-2 1.6a12.5 12.5 0 0 0 5.6 5.6l1.6-2 4 1.6v3.2a1.6 1.6 0 0 1-1.75 1.6C10.4 18.7 5.3 13.6 3.9 6.25A1.6 1.6 0 0 1 4.5 3.5z" />
+    ),
     clock: (
       <>
         <circle cx="12" cy="12" r="9" />
@@ -170,6 +173,16 @@ export function Icon({ name }: { name: string }) {
         <rect x="3" y="4" width="18" height="16" rx="2" />
         <path d="M3 9.5h18M3 15h18M9.5 9.5V20" />
       </>
+    ),
+    instagram: (
+      <>
+        <rect x="3" y="3" width="18" height="18" rx="5" />
+        <circle cx="12" cy="12" r="4" />
+        <circle cx="17.2" cy="6.8" r="0.6" fill="currentColor" stroke="none" />
+      </>
+    ),
+    tiktok: (
+      <path d="M16 3c.4 2.7 2.3 4.8 5 5.2v3.2c-1.9-.1-3.6-.7-5-1.7v6.7a5.6 5.6 0 1 1-4.8-5.5v3.2a2.4 2.4 0 1 0 1.8 2.3V3z" />
     ),
   };
   return <svg {...svgProps}>{paths[name]}</svg>;

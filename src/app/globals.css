@@ -428,15 +428,37 @@ h1,h2,h3 { margin-top: 0; }
 .closing-bg { position:absolute;inset:-5%;background:url('https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=2200&q=88') center/cover;filter:saturate(.85); }
 .closing-overlay { position:absolute;inset:0;background:linear-gradient(rgba(5,17,39,.38),rgba(5,17,39,.86)); }
 .closing-content { position:relative;z-index:2; }
+.closing-red { background:var(--red); }
+.closing-red .closing-pattern {
+  position:absolute; inset:0; z-index:0; opacity:.5; pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.16'%3E%3Cpath d='M36 0v72M0 36h72'/%3E%3Cpath d='M0 0l72 72M72 0L0 72' stroke-opacity='.09'/%3E%3C/g%3E%3C/svg%3E");
+  background-size:72px 72px;
+}
 .closing h2 { font-size:clamp(52px,7vw,104px); }
 .closing-copy { max-width:620px; margin:26px auto 38px; font-size:clamp(16px,1.6vw,19px); line-height:1.65; color:rgba(255,255,255,.8); }
 
-footer { background:#030b18;color:white;padding:55px clamp(24px,6vw,90px);display:grid;grid-template-columns:220px 1fr auto;gap:30px;align-items:center; }
-footer img { width:180px;filter:brightness(0) invert(1); }
-footer p { color:rgba(255,255,255,.55);font-size:13px; }
-.footer-links { display:flex;gap:18px;font-size:12px; }
-.footer-link-placeholder { color:rgba(255,255,255,.35);cursor:default; }
-footer small { grid-column:1/-1;color:rgba(255,255,255,.3);border-top:1px solid rgba(255,255,255,.08);padding-top:22px; }
+footer { background:#030b18;color:white;padding:clamp(50px,6vw,70px) clamp(24px,6vw,90px) 30px; }
+.footer-top { max-width:var(--max); margin:0 auto; display:grid; grid-template-columns:1.2fr 1fr 1fr; gap:clamp(36px,5vw,64px); padding-bottom:44px; border-bottom:1px solid rgba(255,255,255,.08); }
+.footer-brand img { width:170px; filter:brightness(0) invert(1); }
+.footer-brand p { margin:16px 0 22px; color:rgba(255,255,255,.55); font-size:13.5px; }
+.footer-links { display:flex; flex-wrap:wrap; align-items:center; gap:18px; font-size:12.5px; }
+.footer-links a { color:rgba(255,255,255,.75); font-weight:600; transition:color .2s ease; }
+.footer-links a:hover { color:#fff; }
+.footer-link-placeholder { display:inline-grid; place-items:center; width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.06); color:rgba(255,255,255,.55); cursor:default; transition:background .2s ease, color .2s ease; }
+.footer-link-placeholder:hover { background:rgba(255,255,255,.12); color:rgba(255,255,255,.85); }
+.footer-link-placeholder svg { width:16px; height:16px; }
+.footer-col h4 { margin:0 0 18px; font-family:var(--font-sora),sans-serif; font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:rgba(255,255,255,.9); }
+.footer-contact { display:flex; flex-direction:column; gap:14px; font-style:normal; }
+.footer-contact-row { display:flex; align-items:flex-start; gap:12px; color:rgba(255,255,255,.65); font-size:13.5px; line-height:1.6; transition:color .2s ease; }
+a.footer-contact-row:hover { color:#fff; }
+.footer-contact-icon { display:grid; place-items:center; width:30px; height:30px; flex-shrink:0; border-radius:50%; background:rgba(255,255,255,.08); color:rgba(255,255,255,.85); }
+.footer-contact-icon svg { width:14px; height:14px; }
+.footer-legal-links { display:flex; flex-direction:column; gap:10px; margin-bottom:22px; }
+.footer-legal-links a { color:rgba(255,255,255,.65); font-size:13.5px; transition:color .2s ease; }
+.footer-legal-links a:hover { color:#fff; }
+.footer-license { margin:0; color:rgba(255,255,255,.4); font-size:12px; line-height:1.7; }
+.footer-bottom { max-width:var(--max); margin:0 auto; padding-top:22px; }
+footer small { color:rgba(255,255,255,.35); font-size:12px; }
 
 .reveal { opacity:0;transform:translateY(32px);transition:opacity .85s ease,transform .85s cubic-bezier(.2,.7,.2,1); }
 .reveal.visible { opacity:1;transform:none; }
@@ -795,8 +817,7 @@ a.contact-card:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(8
   .reviews-grid { grid-template-columns:1fr; }
   .contact-grid { grid-template-columns:1fr; }
   .form-row { grid-template-columns:1fr; }
-  footer { grid-template-columns:1fr; }
-  footer small { grid-column:auto; }
+  .footer-top { grid-template-columns:1fr; }
   .about-story { grid-template-columns:1fr; }
   .about-story-media { max-width:420px; margin:0 auto; }
   .value-grid { grid-template-columns:1fr 1fr; }

@@ -76,15 +76,8 @@ export default function PartnersPage() {
           </div>
         </section>
 
-        <section className="closing section-dark">
-          <div
-            className="closing-bg"
-            style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=2200&q=88')",
-            }}
-          />
-          <div className="closing-overlay" />
+        <section className="closing section-dark closing-red">
+          <div className="closing-pattern" />
           <div className="closing-content">
             <h2>Want to partner with us?</h2>
             <p className="closing-copy">
@@ -92,7 +85,7 @@ export default function PartnersPage() {
               welcome more travellers through their doors. Get in touch and
               let&apos;s talk.
             </p>
-            <Link className="button primary" href="/contact">
+            <Link className="button white" href="/contact">
               Become a Partner
             </Link>
           </div>

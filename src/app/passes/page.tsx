@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Icon } from "../components/Icons";
 import PassCard, { PassStack } from "../components/PassCard";
+import BuyPassButton from "../components/BuyPassButton";
+import CheckoutCancelledNotice from "../components/CheckoutCancelledNotice";
 import { passTiers, passComparison, type PassKey } from "../data/passes";
 
 const tierKeys: PassKey[] = ["silver", "gold", "platinum"];
@@ -98,6 +100,10 @@ export default function PassesPage() {
             </h2>
           </div>
 
+          <Suspense fallback={null}>
+            <CheckoutCancelledNotice />
+          </Suspense>
+
           <div className="view-toggle" role="group" aria-label="Pricing view">
             <button
               type="button"
@@ -153,9 +159,9 @@ export default function PassesPage() {
                     </li>
                   ))}
                 </ul>
-                <Link className="button primary" href={`/contact?pass=${tier.name}`}>
+                <BuyPassButton passKey={tier.key} className="button primary">
                   Choose {tier.name}
-                </Link>
+                </BuyPassButton>
               </div>
             ))}
           </div>
@@ -196,9 +202,9 @@ export default function PassesPage() {
                     <td />
                     {passTiers.map((t) => (
                       <td key={t.key}>
-                        <Link className="compare-cta" href={`/contact?pass=${t.name}`}>
+                        <BuyPassButton passKey={t.key} className="compare-cta">
                           Choose {t.name}
-                        </Link>
+                        </BuyPassButton>
                       </td>
                     ))}
                   </tr>

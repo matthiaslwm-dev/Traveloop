@@ -160,6 +160,12 @@ export function Icon({ name }: { name: string }) {
       </>
     ),
     arrowRight: <path d="M4 12h16M14 6l6 6-6 6" />,
+    receipt: (
+      <>
+        <path d="M6 2h12v20l-2.5-1.5L13 22l-2.5-1.5L8 22l-2-1.5z" />
+        <path d="M8.5 8h7M8.5 12h7M8.5 16h4" />
+      </>
+    ),
     grid: (
       <>
         <rect x="3" y="3" width="7.5" height="7.5" rx="1.6" />

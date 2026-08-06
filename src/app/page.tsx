@@ -68,7 +68,7 @@ const whyHighlights = [
 ];
 
 /** Cheapest tier, so the "starting from" price and its strikethrough always belong together */
-const cheapestTier = [...tierShowcase].sort((a, b) => Number(a.price) - Number(b.price))[0];
+const cheapestTier = [...tierShowcase].sort((a, b) => a.priceCents - b.priceCents)[0];
 
 const faqItems = [
   {

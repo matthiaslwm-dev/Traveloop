@@ -1,23 +1,40 @@
 export type PassKey = "silver" | "gold" | "platinum";
 
+/** ISO currency code every pass is sold in. Stripe expects it lower-cased. */
+export const PASS_CURRENCY = "myr";
+
 export type PassTier = {
   key: PassKey;
   name: string;
-  price: string;
-  originalPrice: string;
+  /**
+   * Authoritative charge amount in the smallest currency unit (sen).
+   * This — never a value posted by the browser — is what Stripe is charged.
+   */
+  priceCents: number;
+  originalPriceCents: number;
   badge?: string;
   tagline: string;
   sub: string;
   /** Short bullet summary shown on pricing cards */
   highlights: string[];
+  /** Display strings derived from the amounts above, so the two can't drift apart. */
+  price: string;
+  originalPrice: string;
 };
 
-export const passTiers: PassTier[] = [
+type PassTierSeed = Omit<PassTier, "price" | "originalPrice">;
+
+/** 3990 -> "39.90" */
+function formatMinorUnits(amount: number): string {
+  return (amount / 100).toFixed(2);
+}
+
+const passTierSeeds: PassTierSeed[] = [
   {
     key: "silver",
     name: "Silver",
-    price: "39.90",
-    originalPrice: "79.90",
+    priceCents: 3990,
+    originalPriceCents: 7990,
     tagline: "Great value.",
     sub: "More to explore.",
     highlights: [
@@ -29,8 +46,8 @@ export const passTiers: PassTier[] = [
   {
     key: "gold",
     name: "Gold",
-    price: "69.90",
-    originalPrice: "139.90",
+    priceCents: 6990,
+    originalPriceCents: 13990,
     badge: "Most Popular",
     tagline: "Most popular.",
     sub: "More to enjoy.",
@@ -43,8 +60,8 @@ export const passTiers: PassTier[] = [
   {
     key: "platinum",
     name: "Platinum",
-    price: "89.90",
-    originalPrice: "179.90",
+    priceCents: 8990,
+    originalPriceCents: 17990,
     tagline: "Ultimate experience.",
     sub: "More to indulge.",
     highlights: [
@@ -55,6 +72,22 @@ export const passTiers: PassTier[] = [
     ],
   },
 ];
+
+export const passTiers: PassTier[] = passTierSeeds.map((tier) => ({
+  ...tier,
+  price: formatMinorUnits(tier.priceCents),
+  originalPrice: formatMinorUnits(tier.originalPriceCents),
+}));
+
+/** Narrows an untrusted value (request body, query string) to a real tier key. */
+export function isPassKey(value: unknown): value is PassKey {
+  return passTiers.some((tier) => tier.key === value);
+}
+
+/** Looks up a tier by key, or returns undefined for anything unrecognised. */
+export function getPassTier(key: unknown): PassTier | undefined {
+  return isPassKey(key) ? passTiers.find((tier) => tier.key === key) : undefined;
+}
 
 export type PassComparisonValue = string | boolean;
 

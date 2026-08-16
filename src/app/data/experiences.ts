@@ -132,7 +132,7 @@ export const experiences: Experience[] = [
     ],
     pricing: { mode: "per-person", basePerPersonCents: 80_000 },
     discountByTier: { silver: 25, gold: 50, platinum: 83.75 },
-    participants: { min: 2, max: 12, label: "Participants" },
+    participants: { min: 2, max: 20, label: "Participants" },
     freeChildAgeUnder: 6,
     knowBeforeYouGo: [
       "Wear comfortable clothing and closed shoes you can move in.",
@@ -159,7 +159,7 @@ export const experiences: Experience[] = [
     sessions: [{ weekday: 3, startMinutes: 10 * HOUR, endMinutes: 12 * HOUR }],
     pricing: { mode: "per-person", basePerPersonCents: 52_000 },
     discountByTier: { silver: 25, gold: 50, platinum: 75 },
-    participants: { min: 1, max: 12, label: "Participants" },
+    participants: { min: 1, max: 20, label: "Participants" },
     freeChildAgeUnder: 5,
     knowBeforeYouGo: [
       "Dyes stain — wear something you don't mind marking, or bring an apron.",
@@ -186,7 +186,7 @@ export const experiences: Experience[] = [
     sessions: [{ weekday: 0, startMinutes: 15 * HOUR, endMinutes: 17 * HOUR }],
     pricing: { mode: "per-person", basePerPersonCents: 52_000 },
     discountByTier: { silver: 25, gold: 50, platinum: 75 },
-    participants: { min: 1, max: 12, label: "Participants" },
+    participants: { min: 1, max: 20, label: "Participants" },
     freeChildAgeUnder: 6,
     knowBeforeYouGo: [
       "The temple is a place of worship — shoulders and knees should be covered.",
@@ -235,7 +235,7 @@ export const experiences: Experience[] = [
       ],
     },
     discountByTier: { platinum: 0 },
-    participants: { min: 1, max: 8, label: "People in the shoot" },
+    participants: { min: 1, max: 20, label: "People in the shoot" },
     knowBeforeYouGo: [
       "Sessions run Saturday mornings only — the light is best before midday.",
       "Edited photos are delivered by download link within 7 working days.",

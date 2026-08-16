@@ -1,5 +1,5 @@
 import { getSupabase } from "./supabase";
-import { fromTimeString, toTimeString } from "@/app/data/experiences";
+import { fromTimeString, slotValue, toTimeString, type BookingWindow } from "@/app/data/experiences";
 
 export type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
 
@@ -106,15 +106,25 @@ function referenceFor(rowId: number): string {
   return `TLX-${new Date().getFullYear()}-${String(rowId).padStart(4, "0")}`;
 }
 
-/** Raised when the partial unique index rejects a second live booking for the same slot. */
+/** Raised when the partial unique index rejects a second active booking for the same experience. */
 export class DuplicateBookingError extends Error {
   constructor() {
-    super("You already have a booking for this session.");
+    super("You already have a booking for this experience.");
     this.name = "DuplicateBookingError";
   }
 }
 
+/** Raised by the capacity trigger when a session's 20 spots are already taken. */
+export class SlotFullError extends Error {
+  constructor() {
+    super("That session is fully booked.");
+    this.name = "SlotFullError";
+  }
+}
+
 const UNIQUE_VIOLATION = "23505";
+/** Default SQLSTATE for a plpgsql `raise exception` — only the capacity trigger uses it here. */
+const RAISED_EXCEPTION = "P0001";
 
 export async function insertBooking(booking: NewBooking): Promise<StoredBooking> {
   const db = getSupabase();
@@ -147,6 +157,7 @@ export async function insertBooking(booking: NewBooking): Promise<StoredBooking>
 
   if (insertError || !inserted) {
     if (insertError?.code === UNIQUE_VIOLATION) throw new DuplicateBookingError();
+    if (insertError?.code === RAISED_EXCEPTION) throw new SlotFullError();
     throw new Error(`Failed to create booking: ${insertError?.message}`);
   }
 
@@ -162,6 +173,59 @@ export async function insertBooking(booking: NewBooking): Promise<StoredBooking>
   }
 
   return toStoredBooking(updated);
+}
+
+/**
+ * Total participants already booked (non-cancelled) per session in the given
+ * window, keyed the same way as `slotValue` — lets the booking page show
+ * remaining spots and grey out full sessions before the customer even tries.
+ */
+export async function getSlotBookingCounts(
+  experienceKey: string,
+  window: BookingWindow
+): Promise<Map<string, number>> {
+  const db = getSupabase();
+
+  const { data, error } = await db
+    .from("experience_bookings")
+    .select("session_date, start_time, participants")
+    .eq("experience_key", experienceKey)
+    .neq("status", "cancelled")
+    .gte("session_date", window.earliest)
+    .lte("session_date", window.latest);
+
+  if (error) {
+    throw new Error(`Failed to count bookings for ${experienceKey}: ${error.message}`);
+  }
+
+  const counts = new Map<string, number>();
+  for (const row of data ?? []) {
+    const key = slotValue(row.session_date, fromTimeString(row.start_time));
+    counts.set(key, (counts.get(key) ?? 0) + row.participants);
+  }
+  return counts;
+}
+
+/** Whether this customer already has a pending/confirmed booking for this experience. */
+export async function hasActiveBookingForExperience(
+  userId: string,
+  experienceKey: string
+): Promise<boolean> {
+  const db = getSupabase();
+
+  const { data, error } = await db
+    .from("experience_bookings")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("experience_key", experienceKey)
+    .neq("status", "cancelled")
+    .limit(1);
+
+  if (error) {
+    throw new Error(`Failed to check existing bookings for ${experienceKey}: ${error.message}`);
+  }
+
+  return (data ?? []).length > 0;
 }
 
 /** A customer's bookings, soonest session first — powers the portal list. */

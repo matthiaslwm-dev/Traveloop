@@ -111,7 +111,8 @@ create table if not exists experience_bookings (
   location text,
   quoted_amount_cents integer not null,
   currency text not null default 'MYR',
-  discount_percent integer not null default 0,
+  -- numeric, not integer: the Lion Dance platinum tier discounts at 83.75%.
+  discount_percent numeric not null default 0,
   -- pending: awaiting the team's confirmation of venue/photographer.
   -- confirmed: locked in. cancelled / completed are end states.
   status text not null default 'pending'
@@ -133,12 +134,50 @@ create index if not exists experience_bookings_user_idx
 create index if not exists experience_bookings_session_idx
   on experience_bookings (session_date, start_time);
 
--- Stops a double-tap (or a re-submitted form) creating two live bookings for
--- the same person on the same session. Cancelled rows are excluded so a
--- customer who cancels can book the same slot again.
-create unique index if not exists experience_bookings_no_duplicate_active
-  on experience_bookings (user_id, experience_key, session_date, start_time)
+-- A customer may hold only one active (non-cancelled) booking per experience
+-- at a time — not just per exact session. Booking a different time for the
+-- same experience requires cancelling the first. Cancelled rows are excluded
+-- so a customer who cancels can book again.
+create unique index if not exists experience_bookings_one_active_per_experience
+  on experience_bookings (user_id, experience_key)
   where status <> 'cancelled';
+
+-- Every experience caps a session at 20 participants total across all
+-- customers (kept in sync with `participants.max` in
+-- src/app/data/experiences.ts). This runs server-side so two customers
+-- racing to book the last spots can't both succeed — the app-level check in
+-- booking-actions.ts only gives a friendlier error first; this is what
+-- actually prevents the overbook.
+create or replace function check_experience_booking_capacity()
+returns trigger as $$
+declare
+  session_capacity constant integer := 20;
+  already_booked integer;
+begin
+  if new.status = 'cancelled' then
+    return new;
+  end if;
+
+  select coalesce(sum(participants), 0) into already_booked
+  from experience_bookings
+  where experience_key = new.experience_key
+    and session_date = new.session_date
+    and start_time = new.start_time
+    and status <> 'cancelled'
+    and id is distinct from new.id;
+
+  if already_booked + new.participants > session_capacity then
+    raise exception 'That session is fully booked.' using errcode = 'P0001';
+  end if;
+
+  return new;
+end;
+$$ language plpgsql;
+
+drop trigger if exists experience_bookings_capacity_check on experience_bookings;
+create trigger experience_bookings_capacity_check
+  before insert or update on experience_bookings
+  for each row execute function check_experience_booking_capacity();
 
 alter table experience_bookings enable row level security;
 

@@ -10,6 +10,7 @@ import {
   updateBookingStatus,
   getBookingByReference,
   DuplicateBookingError,
+  SlotFullError,
 } from "@/lib/experience-bookings-db";
 import { sendBookingRequestEmail, sendBookingAdminAlert } from "@/lib/email";
 
@@ -48,7 +49,12 @@ export async function createBooking(
     booking = await insertBooking(parsed.value);
   } catch (error) {
     if (error instanceof DuplicateBookingError) {
-      return { error: "You've already booked that session. Check your bookings below." };
+      return {
+        error: "You already have a booking for this experience. Check your bookings below.",
+      };
+    }
+    if (error instanceof SlotFullError) {
+      return { error: "That session just filled up. Please choose another date or time." };
     }
     console.error("[bookings] Failed to create booking:", error);
     return { error: "We couldn't save your booking. Please try again in a moment." };

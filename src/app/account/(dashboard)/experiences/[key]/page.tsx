@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getOrdersByUserId } from "@/lib/orders-db";
 import { bestOrderFor } from "@/lib/booking";
+import { getSlotBookingCounts, hasActiveBookingForExperience } from "@/lib/experience-bookings-db";
 import { Icon } from "@/app/components/Icons";
 import {
   describeSchedule,
@@ -12,6 +13,7 @@ import {
   getExperience,
   listSlotsByDate,
   resolveBookingWindow,
+  slotValue,
 } from "@/app/data/experiences";
 import { passTiers } from "@/app/data/passes";
 import BookingForm, { type PassOption } from "./BookingForm";
@@ -44,6 +46,35 @@ export default async function BookExperiencePage({ params }: BookExperiencePageP
 
   const orders = await getOrdersByUserId(user.id);
 
+  // One active booking per experience at a time — the server action and a DB
+  // constraint both enforce this too, but checking here means the customer
+  // sees why up front instead of filling out the whole form first.
+  const alreadyBooked = await hasActiveBookingForExperience(user.id, experience.key);
+
+  if (alreadyBooked) {
+    return (
+      <section className="account-section">
+        <Link className="xp-back" href="/account/experiences">
+          <Icon name="arrowRight" /> All experiences
+        </Link>
+        <div className="account-empty">
+          <p>You already have an upcoming booking for the {experience.name}.</p>
+          <Link className="button primary" href="/account/bookings">
+            View your bookings
+          </Link>
+        </div>
+      </section>
+    );
+  }
+
+  // Counted across every pass, not per-pass: capacity is a property of the
+  // session itself, so two customers on different passes still compete for
+  // the same 20 spots. The window is the broadest any pass could offer.
+  const broadWindow = resolveBookingWindow({ arrivalDate: null, departureDate: null });
+  const bookedCounts = await getSlotBookingCounts(experience.key, broadWindow);
+  const remainingFor = (date: string, startMinutes: number) =>
+    Math.max(0, experience.participants.max - (bookedCounts.get(slotValue(date, startMinutes)) ?? 0));
+
   /**
    * One option per pass that covers this experience. The bookable dates are
    * resolved per pass, not once for the page, because the window is narrowed
@@ -53,6 +84,7 @@ export default async function BookExperiencePage({ params }: BookExperiencePageP
     .filter((order) => getEntitlement(order.passKey, experience).entitled)
     .map((order) => {
       const window = resolveBookingWindow(order);
+      const slotsByDate = listSlotsByDate(experience, window);
 
       return {
         sessionId: order.sessionId,
@@ -64,7 +96,12 @@ export default async function BookExperiencePage({ params }: BookExperiencePageP
             ? `${formatDateLong(order.arrivalDate)} – ${formatDateLong(order.departureDate)}`
             : null,
         window,
-        slotsByDate: listSlotsByDate(experience, window),
+        slotsByDate: Object.fromEntries(
+          Object.entries(slotsByDate).map(([date, slots]) => [
+            date,
+            slots.map((slot) => ({ ...slot, remaining: remainingFor(date, slot.startMinutes) })),
+          ])
+        ),
       };
     });
 

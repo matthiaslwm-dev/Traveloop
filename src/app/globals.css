@@ -130,6 +130,8 @@ h1,h2,h3 { margin-top: 0; }
 .hero-actions { display:flex; gap:14px; margin-top: 38px; flex-wrap: wrap; }
 .button { min-height: 52px; border: 0; border-radius: 999px; display: inline-flex; align-items:center; justify-content:center; gap: 12px; padding: 0 24px; cursor:pointer; font-size: 13px; font-weight: 700; transition: transform .25s ease, box-shadow .25s ease, background .25s ease; }
 .button:hover { transform: translateY(-2px); }
+.button:disabled { opacity:.5; cursor:not-allowed; box-shadow:none; transform:none; }
+.button:disabled:hover { transform:none; }
 .button.primary { background: var(--red); color:white; box-shadow: 0 14px 40px rgba(215,41,54,.35); }
 .button.ghost { background: rgba(255,255,255,.08); color:white; border:1px solid rgba(255,255,255,.28); backdrop-filter: blur(10px); }
 .button.white { background:white; color:var(--red); }
@@ -1327,6 +1329,8 @@ a.contact-card:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(8
 .xp-chip:hover { border-color:var(--blue); }
 .xp-chip.is-selected { background:var(--blue); border-color:var(--blue); color:white; }
 .xp-chip.is-selected small { color:rgba(255,255,255,.75); }
+.xp-chip:disabled { cursor:not-allowed; opacity:.5; }
+.xp-chip:disabled:hover { border-color:var(--line); }
 
 .xp-calendar { border:1px solid var(--line); border-radius:14px; padding:14px; max-width:340px; }
 .xp-calendar-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-size:13.5px; font-weight:700; }

@@ -132,7 +132,7 @@ export default function RegistrationForm({ passTiers, seedPassKey }: Registratio
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    if (status === "redirecting") return;
+    if (status === "redirecting" || !accepted) return;
 
     setStatus("redirecting");
     setError(null);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { createBooking, type BookingFormState } from "@/app/account/booking-actions";
 import { Icon } from "@/app/components/Icons";
 import {
@@ -15,6 +15,9 @@ import {
   type ExperienceSlot,
 } from "@/app/data/experiences";
 
+/** A catalogue slot annotated with how many of the 20 session spots are still open. */
+export type BookableSlot = ExperienceSlot & { remaining: number };
+
 export type PassOption = {
   sessionId: string;
   passKey: string;
@@ -23,7 +26,7 @@ export type PassOption = {
   /** "1 Sep 2026 – 10 Sep 2026", or null for passes bought before trip dates existed. */
   tripLabel: string | null;
   window: BookingWindow;
-  slotsByDate: Record<string, ExperienceSlot[]>;
+  slotsByDate: Record<string, BookableSlot[]>;
 };
 
 type BookingFormProps = {
@@ -125,6 +128,18 @@ export default function BookingForm({
   const lastMonth = monthOf(availableDates.at(-1) ?? pass.window.latest);
   const grid = monthGrid(month);
   const daySlots = selectedDate ? (pass.slotsByDate[selectedDate] ?? []) : [];
+  const selectedSlotRemaining = daySlots.find((option) => option.value === slot)?.remaining;
+  const participantsMax =
+    selectedSlotRemaining !== undefined
+      ? Math.min(experience.participants.max, selectedSlotRemaining)
+      : experience.participants.max;
+
+  // A slot with fewer spots left than the headcount already dialled in must
+  // pull that count back down — otherwise the stepper would let the customer
+  // submit more people than the session has room for.
+  useEffect(() => {
+    setParticipants((current) => Math.min(current, participantsMax));
+  }, [participantsMax]);
 
   const canSubmit = Boolean(slot) && acknowledged && !pending;
 
@@ -213,7 +228,9 @@ export default function BookingForm({
             ))}
 
             {grid.dates.map((date) => {
-              const available = Boolean(pass.slotsByDate[date]);
+              const slotsThatDay = pass.slotsByDate[date] ?? [];
+              const available = slotsThatDay.some((slot) => slot.remaining > 0);
+              const openSlots = slotsThatDay.filter((slot) => slot.remaining > 0);
 
               return (
                 <button
@@ -226,9 +243,8 @@ export default function BookingForm({
                   aria-pressed={date === selectedDate}
                   onClick={() => {
                     setSelectedDate(date);
-                    // One session that day? Choosing the date is choosing it.
-                    const slots = pass.slotsByDate[date] ?? [];
-                    setSlot(slots.length === 1 ? slots[0].value : null);
+                    // One open session that day? Choosing the date is choosing it.
+                    setSlot(openSlots.length === 1 ? openSlots[0].value : null);
                   }}
                 >
                   {Number(date.slice(8))}
@@ -243,16 +259,21 @@ export default function BookingForm({
         <fieldset className="xp-field">
           <legend>Pick a time</legend>
           <div className="xp-chip-row">
-            {daySlots.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                className={`xp-chip${option.value === slot ? " is-selected" : ""}`}
-                onClick={() => setSlot(option.value)}
-              >
-                {formatTimeRange(option.startMinutes, option.endMinutes)}
-              </button>
-            ))}
+            {daySlots.map((option) => {
+              const full = option.remaining <= 0;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  className={`xp-chip${option.value === slot ? " is-selected" : ""}`}
+                  disabled={full}
+                  onClick={() => setSlot(option.value)}
+                >
+                  {formatTimeRange(option.startMinutes, option.endMinutes)}
+                  <small>{full ? "Full" : `${option.remaining} spot${option.remaining === 1 ? "" : "s"} left`}</small>
+                </button>
+              );
+            })}
           </div>
         </fieldset>
       )}
@@ -311,7 +332,7 @@ export default function BookingForm({
           }
           value={participants}
           min={experience.participants.min}
-          max={experience.participants.max}
+          max={participantsMax}
           onChange={setParticipants}
         />
 

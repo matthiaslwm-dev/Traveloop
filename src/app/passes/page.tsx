@@ -6,7 +6,6 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Icon } from "../components/Icons";
 import PassCard, { PassStack } from "../components/PassCard";
-import BuyPassButton from "../components/BuyPassButton";
 import CheckoutCancelledNotice from "../components/CheckoutCancelledNotice";
 import { passTiers, passComparison, type PassKey } from "../data/passes";
 
@@ -45,6 +44,11 @@ const passFaqs = [
     question: "How do I make an insurance claim?",
     answer:
       "Notify our team within 5 days of the incident via insurance@traveloop.my or WhatsApp +6011-3949 2888, with a completed claim form, medical report, original receipts, and a copy of your ID.",
+  },
+  {
+    question: "Is Traveloop Card a travel insurance policy?",
+    answer:
+      "No. The Traveloop Card includes Personal Accident and Personal Accident Medical Expense benefits provided through our insurance partner, subject to applicable terms and conditions.",
   },
   {
     question: "Can children join the cultural experiences?",
@@ -159,9 +163,9 @@ export default function PassesPage() {
                     </li>
                   ))}
                 </ul>
-                <BuyPassButton passKey={tier.key} className="button primary">
+                <Link className="button primary" href={`/passes/register?pass=${tier.key}`}>
                   Choose {tier.name}
-                </BuyPassButton>
+                </Link>
               </div>
             ))}
           </div>
@@ -202,9 +206,9 @@ export default function PassesPage() {
                     <td />
                     {passTiers.map((t) => (
                       <td key={t.key}>
-                        <BuyPassButton passKey={t.key} className="compare-cta">
+                        <Link className="compare-cta" href={`/passes/register?pass=${t.key}`}>
                           Choose {t.name}
-                        </BuyPassButton>
+                        </Link>
                       </td>
                     ))}
                   </tr>

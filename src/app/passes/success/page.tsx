@@ -5,7 +5,7 @@ import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { Icon } from "../../components/Icons";
 import { getStripe } from "@/lib/stripe";
-import { toPassOrder, type PassOrder } from "@/lib/fulfillment";
+import { toPassOrder } from "@/lib/fulfillment";
 import { getOrderBySessionId } from "@/lib/orders-db";
 
 export const metadata: Metadata = {
@@ -17,9 +17,24 @@ type SuccessPageProps = {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
+/**
+ * This page renders the receipt only — a summary shape that a freshly
+ * retrieved Stripe session and a stored bypass order can both fill in,
+ * without either needing per-pass registration details.
+ */
+type ReceiptOrder = {
+  sessionId: string;
+  passName: string;
+  quantity: number;
+  amountTotal: number;
+  currency: string;
+  customerName: string | null;
+  customerEmail: string | null;
+};
+
 type OrderState =
-  | { kind: "paid"; order: PassOrder }
-  | { kind: "processing"; order: PassOrder }
+  | { kind: "paid"; order: ReceiptOrder }
+  | { kind: "processing"; order: ReceiptOrder }
   | { kind: "unavailable" };
 
 export default async function CheckoutSuccessPage({ searchParams }: SuccessPageProps) {
@@ -53,15 +68,36 @@ async function loadOrder(sessionId: string): Promise<OrderState> {
   // in the checkout route, so the local order record is authoritative here.
   if (sessionId.startsWith("cs_bypass_")) {
     const stored = await getOrderBySessionId(sessionId);
-    return stored ? { kind: "paid", order: stored } : { kind: "unavailable" };
+    return stored
+      ? {
+          kind: "paid",
+          order: {
+            sessionId: stored.sessionId,
+            passName: stored.passName,
+            quantity: stored.quantity,
+            amountTotal: stored.amountTotal,
+            currency: stored.currency,
+            customerName: stored.customerName,
+            customerEmail: stored.customerEmail,
+          },
+        }
+      : { kind: "unavailable" };
   }
 
   try {
-    const session = await getStripe().checkout.sessions.retrieve(sessionId, {
-      expand: ["line_items"],
-    });
+    const session = await getStripe().checkout.sessions.retrieve(sessionId);
+    const passOrder = await toPassOrder(session);
 
-    const order = toPassOrder(session);
+    const order: ReceiptOrder = {
+      sessionId: passOrder.sessionId,
+      passName:
+        passOrder.items.length === 1 ? passOrder.items[0].passName : `${passOrder.items.length} passes`,
+      quantity: passOrder.items.length,
+      amountTotal: passOrder.amountTotal,
+      currency: passOrder.currency,
+      customerName: passOrder.customerName,
+      customerEmail: passOrder.customerEmail,
+    };
 
     // `paid` is the only state that means money has actually settled. FPX and
     // other delayed methods sit at `unpaid` until the bank confirms.
@@ -104,7 +140,8 @@ function ConfirmedState({ state }: { state: Extract<OrderState, { kind: "paid" |
       <p className="checkout-result-lede">
         {isPaid ? (
           <>
-            Your {order.passName} Pass is confirmed. We&apos;ve sent a receipt
+            Your {order.quantity > 1 ? order.passName : `${order.passName} Pass`} is confirmed. We&apos;ve
+            sent a receipt
             {order.customerEmail ? ` to ${order.customerEmail}` : ""}, and your pass details will
             follow by email shortly.
           </>
@@ -120,12 +157,8 @@ function ConfirmedState({ state }: { state: Extract<OrderState, { kind: "paid" |
 
       <dl className="checkout-summary">
         <div>
-          <dt>Pass</dt>
+          <dt>{order.quantity > 1 ? "Passes" : "Pass"}</dt>
           <dd>{order.passName}</dd>
-        </div>
-        <div>
-          <dt>Quantity</dt>
-          <dd>{order.quantity}</dd>
         </div>
         <div>
           <dt>Total</dt>
@@ -140,8 +173,8 @@ function ConfirmedState({ state }: { state: Extract<OrderState, { kind: "paid" |
       </dl>
 
       <div className="checkout-result-actions">
-        <Link className="button primary" href="/passes">
-          Back to passes
+        <Link className="button primary" href="/account/login">
+          Customer Portal
         </Link>
         {isPaid && (
           <Link

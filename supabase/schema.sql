@@ -1,11 +1,20 @@
--- Run this once in the Supabase SQL editor (Project > SQL Editor > New query).
+-- Run this in the Supabase SQL editor (Project > SQL Editor > New query).
+--
+-- Safe to re-run: every statement is idempotent. Postgres has no
+-- `create policy if not exists`, so each policy is dropped and recreated
+-- rather than guarded — harmless, because RLS denies by default and the gap
+-- between the two statements is inside the same transaction.
 
 create table if not exists orders (
   id bigint generated always as identity primary key,
   session_id text not null unique,
+  -- pass_key is the highest tier in the order (drives which experience
+  -- discounts it unlocks) and pass_name becomes "<n> passes" when an order
+  -- spans more than one tier — see pass_registrations for the itemised
+  -- breakdown of exactly which tier each traveller bought.
   pass_key text not null,
   pass_name text not null,
-  quantity integer not null,
+  quantity integer not null default 1,
   amount_total integer not null,
   currency text not null,
   customer_email text,
@@ -16,8 +25,173 @@ create table if not exists orders (
   created_at timestamptz not null default now()
 );
 
--- RLS is enabled with no policies, so the table is unreachable via the
--- anon/public REST API. The app talks to Supabase using the service_role
--- key (server-only — never in a NEXT_PUBLIC_ env var or client bundle),
--- which bypasses RLS by design.
+-- RLS is enabled. The app talks to Supabase using the service_role key
+-- (server-only — never in a NEXT_PUBLIC_ env var or client bundle), which
+-- bypasses RLS by design, so server code is unaffected by the policy below.
 alter table orders enable row level security;
+
+-- Links an order to the Supabase Auth account auto-created for the buyer at
+-- fulfilment time (see src/lib/customer-account.ts). Nullable: orders placed
+-- before this column existed, or where account creation failed/raced, have
+-- no link until backfillOrdersForEmail() catches them up.
+alter table orders add column if not exists user_id uuid references auth.users(id) on delete set null;
+
+-- Lets a logged-in customer (anon key + session cookie) read their own
+-- orders for the /account portal.
+drop policy if exists "Customers can view their own orders" on orders;
+create policy "Customers can view their own orders"
+  on orders for select
+  using (auth.uid() = user_id);
+
+-- Trip dates are per-purchase, not per-person: a returning customer's second
+-- pass has its own arrival/departure, so these live on the order rather than
+-- on customer_profiles below.
+alter table orders add column if not exists arrival_date date;
+alter table orders add column if not exists departure_date date;
+
+-- The tourist-registration details collected before checkout
+-- (src/app/passes/register). One row per Supabase Auth account: a repeat
+-- purchase updates the existing row rather than adding another.
+--
+-- "Other" free-text answers for nationality/relationship are stored directly
+-- in those columns — there is deliberately no separate "other_*" column.
+create table if not exists customer_profiles (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  full_name text,
+  nationality text,
+  travel_document_type text,
+  travel_document_number text,
+  address text,
+  emergency_contact_name text,
+  emergency_contact_phone text,
+  emergency_contact_relationship text,
+  terms_accepted_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table customer_profiles enable row level security;
+
+drop policy if exists "Customers can view their own profile" on customer_profiles;
+create policy "Customers can view their own profile"
+  on customer_profiles for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Customers can update their own profile" on customer_profiles;
+create policy "Customers can update their own profile"
+  on customer_profiles for update
+  using (auth.uid() = user_id);
+
+-- Cultural-experience bookings made from the customer portal
+-- (src/app/account/experiences). Each row is booked *against a specific
+-- order*, because the pass tier on that order is what decides both access to
+-- the experience and the price — see src/app/data/experiences.ts.
+--
+-- Nothing is charged online: `quoted_amount_cents` is what the customer was
+-- quoted at booking time and settles at the venue. It is stored rather than
+-- recomputed so a later price change can't silently rewrite what someone was
+-- already promised.
+create table if not exists experience_bookings (
+  id bigint generated always as identity primary key,
+  reference text not null default '',
+  user_id uuid not null references auth.users(id) on delete cascade,
+  order_session_id text not null references orders(session_id) on delete cascade,
+  pass_key text not null,
+  experience_key text not null,
+  experience_name text not null,
+  -- Session date/time in Malaysian local time. Stored as plain date + time
+  -- rather than a timestamptz because these are wall-clock session times at a
+  -- fixed venue, not instants that should shift with a viewer's timezone.
+  session_date date not null,
+  start_time time not null,
+  end_time time not null,
+  participants integer not null default 1,
+  children_count integer not null default 0,
+  package_key text,
+  location text,
+  quoted_amount_cents integer not null,
+  currency text not null default 'MYR',
+  discount_percent integer not null default 0,
+  -- pending: awaiting the team's confirmation of venue/photographer.
+  -- confirmed: locked in. cancelled / completed are end states.
+  status text not null default 'pending'
+    check (status in ('pending', 'confirmed', 'cancelled', 'completed')),
+  customer_notes text,
+  admin_notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  cancelled_at timestamptz
+);
+
+create unique index if not exists experience_bookings_reference_key
+  on experience_bookings (reference)
+  where reference <> '';
+
+create index if not exists experience_bookings_user_idx
+  on experience_bookings (user_id, session_date desc);
+
+create index if not exists experience_bookings_session_idx
+  on experience_bookings (session_date, start_time);
+
+-- Stops a double-tap (or a re-submitted form) creating two live bookings for
+-- the same person on the same session. Cancelled rows are excluded so a
+-- customer who cancels can book the same slot again.
+create unique index if not exists experience_bookings_no_duplicate_active
+  on experience_bookings (user_id, experience_key, session_date, start_time)
+  where status <> 'cancelled';
+
+alter table experience_bookings enable row level security;
+
+drop policy if exists "Customers can view their own bookings" on experience_bookings;
+create policy "Customers can view their own bookings"
+  on experience_bookings for select
+  using (auth.uid() = user_id);
+
+-- Holds a cart's items between "buyer submitted registrations" and "Stripe
+-- confirmed payment" (src/app/api/checkout/route.ts). Stripe metadata is too
+-- small to carry N full registrations, so the draft rides in the checkout
+-- session as just an id and is deleted once fulfilment reads it back.
+create table if not exists checkout_drafts (
+  id uuid primary key default gen_random_uuid(),
+  items jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+-- Service-role only (no policies): the checkout route and webhook are the
+-- only things that ever touch this table, and RLS denies by default.
+alter table checkout_drafts enable row level security;
+
+-- One row per pass in an order — the tourist-registration/insurance details
+-- for a single traveller. An order with quantity > 1 has one row per pass
+-- here, unlike customer_profiles (one row per account) which only ever
+-- reflects the buyer's own (first) registration for portal autofill.
+create table if not exists pass_registrations (
+  id bigint generated always as identity primary key,
+  order_session_id text not null references orders(session_id) on delete cascade,
+  user_id uuid references auth.users(id) on delete set null,
+  pass_key text not null,
+  pass_name text not null,
+  unit_amount_cents integer not null,
+  full_name text not null,
+  nationality text not null,
+  arrival_date date not null,
+  departure_date date not null,
+  travel_document_type text not null,
+  travel_document_number text not null,
+  address text not null,
+  emergency_contact_name text,
+  emergency_contact_phone text,
+  emergency_contact_relationship text,
+  terms_accepted_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+
+alter table pass_registrations enable row level security;
+
+drop policy if exists "Customers can view their own pass registrations" on pass_registrations;
+create policy "Customers can view their own pass registrations"
+  on pass_registrations for select
+  using (auth.uid() = user_id);
+
+create index if not exists pass_registrations_order_idx on pass_registrations (order_session_id);
+create index if not exists pass_registrations_user_idx on pass_registrations (user_id, created_at desc);

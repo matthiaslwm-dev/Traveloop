@@ -1,13 +1,21 @@
 import type Stripe from "stripe";
 import { insertOrderIfNew } from "./orders-db";
-import { sendOrderConfirmationEmail } from "./email";
+import { sendOrderConfirmationEmail, sendAccountWelcomeEmail } from "./email";
+import { findOrCreateCustomerAccount } from "./customer-account";
+import { upsertCustomerProfile } from "./customer-profile-db";
+import { insertPassRegistrations } from "./pass-registrations-db";
+import { getCheckoutDraft, deleteCheckoutDraft, type DraftItem } from "./checkout-drafts-db";
+import type { PassRegistration } from "./registration";
+
+export type PassOrderItem = DraftItem;
 
 export type PassOrder = {
   /** Stripe Checkout Session id — the natural idempotency key for an order. */
   sessionId: string;
-  passKey: string;
-  passName: string;
-  quantity: number;
+  /** The draft id this order's items came from, if any — deleted once fulfilment finishes with it. */
+  draftId: string | null;
+  /** One entry per pass purchased; length >= 1. */
+  items: PassOrderItem[];
   /** Total actually captured, in the smallest currency unit. */
   amountTotal: number;
   currency: string;
@@ -17,16 +25,18 @@ export type PassOrder = {
   paymentIntentId: string | null;
 };
 
-/** Pulls the fields we care about out of a completed Checkout Session. */
-export function toPassOrder(session: Stripe.Checkout.Session): PassOrder {
+/** Pulls the fields we care about out of a completed Checkout Session, resolving its draft. */
+export async function toPassOrder(session: Stripe.Checkout.Session): Promise<PassOrder> {
   const details = session.customer_details;
+  const draftId = session.metadata?.draftId ?? null;
+
+  // Null for orders placed before this draft-based flow existed.
+  const items = draftId ? await getCheckoutDraft(draftId) : null;
 
   return {
     sessionId: session.id,
-    passKey: session.metadata?.passKey ?? "unknown",
-    passName: session.metadata?.passName ?? "unknown",
-    // `line_items` is only present when expanded at retrieval time.
-    quantity: session.line_items?.data[0]?.quantity ?? 1,
+    draftId,
+    items: items ?? [],
     amountTotal: session.amount_total ?? 0,
     currency: session.currency ?? "myr",
     customerEmail: details?.email ?? session.customer_email ?? null,
@@ -39,34 +49,71 @@ export function toPassOrder(session: Stripe.Checkout.Session): PassOrder {
   };
 }
 
+/** The buyer's own registration, used to autofill their portal profile — the first pass in the cart. */
+function primaryRegistration(order: PassOrder): PassRegistration | null {
+  return order.items[0]?.registration ?? null;
+}
+
 /**
- * The single place where a paid order turns into a delivered pass.
+ * The single place where a paid order turns into delivered passes.
  *
  * Stripe retries webhooks and can deliver the same event more than once, so
  * this is idempotent on `sessionId`: `insertOrderIfNew` only reports
- * `inserted: true` the first time, and everything with a side effect (email)
- * is gated on that.
+ * `inserted: true` the first time, and everything with a side effect (email,
+ * registration rows) is gated on that.
  *
  * TODO: issue the actual pass number / QR code the buyer redeems at partner
  * locations — right now buyers get a receipt + invoice but no redeemable pass.
  */
 export async function fulfillPassOrder(order: PassOrder): Promise<void> {
-  const { inserted, stored } = await insertOrderIfNew(order);
+  const account = order.customerEmail
+    ? await findOrCreateCustomerAccount(order.customerEmail, order.customerName)
+    : { userId: null, isNew: false as const };
+
+  // Registration details belong to the person, so they're saved even if this
+  // webhook turns out to be a duplicate delivery. A failure here must not
+  // block the order or its email — the purchase itself is what matters.
+  const registration = primaryRegistration(order);
+  if (account.userId && registration) {
+    try {
+      await upsertCustomerProfile(account.userId, registration);
+    } catch (error) {
+      console.error(`[fulfillment] Failed to save profile for ${order.sessionId}:`, error);
+    }
+  }
+
+  const { inserted, stored } = await insertOrderIfNew(order, account.userId);
 
   if (!inserted) {
     console.info(`[fulfillment] Order ${order.sessionId} already fulfilled — skipping.`);
     return;
   }
 
-  console.info("[fulfillment] Pass purchased:", {
+  if (order.items.length > 0) {
+    try {
+      await insertPassRegistrations(order.sessionId, account.userId, order.items);
+    } catch (error) {
+      console.error(`[fulfillment] Failed to save pass registrations for ${order.sessionId}:`, error);
+    }
+  }
+
+  console.info("[fulfillment] Pass(es) purchased:", {
     sessionId: stored.sessionId,
     invoiceNumber: stored.invoiceNumber,
-    pass: stored.passName,
     quantity: stored.quantity,
+    pass: stored.passName,
     total: `${stored.currency.toUpperCase()} ${(stored.amountTotal / 100).toFixed(2)}`,
     email: stored.customerEmail,
     phone: stored.customerPhone,
   });
 
-  await sendOrderConfirmationEmail(stored);
+  if (account.isNew) {
+    await sendAccountWelcomeEmail(stored, order.items, account.password);
+  } else {
+    await sendOrderConfirmationEmail(stored, order.items);
+  }
+
+  if (order.draftId) {
+    await deleteCheckoutDraft(order.draftId);
+  }
 }

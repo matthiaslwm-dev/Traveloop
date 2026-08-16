@@ -75,11 +75,9 @@ export async function POST(request: Request) {
   return NextResponse.json({ received: true });
 }
 
-/** Re-reads the session with line items expanded, then hands it to fulfilment. */
+/** Re-reads the session from Stripe, then hands it to fulfilment. */
 async function fulfillCompletedSession(sessionId: string): Promise<void> {
-  const session = await getStripe().checkout.sessions.retrieve(sessionId, {
-    expand: ["line_items"],
-  });
+  const session = await getStripe().checkout.sessions.retrieve(sessionId);
 
-  await fulfillPassOrder(toPassOrder(session));
+  await fulfillPassOrder(await toPassOrder(session));
 }

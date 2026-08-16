@@ -2,8 +2,9 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Refreshes the Supabase auth cookie and gates /admin behind a logged-in
- * session. Runs in proxy.ts (this Next.js version's renamed middleware).
+ * Refreshes the Supabase auth cookie and gates /admin and /account behind a
+ * logged-in session. Runs in proxy.ts (this Next.js version's renamed
+ * middleware).
  */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -36,16 +37,32 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  if (!user && pathname !== "/admin/login") {
-    const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/admin/login";
-    return NextResponse.redirect(loginUrl);
+  if (pathname.startsWith("/admin")) {
+    if (!user && pathname !== "/admin/login") {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/admin/login";
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (user && pathname === "/admin/login") {
+      const adminUrl = request.nextUrl.clone();
+      adminUrl.pathname = "/admin";
+      return NextResponse.redirect(adminUrl);
+    }
   }
 
-  if (user && pathname === "/admin/login") {
-    const adminUrl = request.nextUrl.clone();
-    adminUrl.pathname = "/admin";
-    return NextResponse.redirect(adminUrl);
+  if (pathname.startsWith("/account")) {
+    if (!user && pathname !== "/account/login") {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/account/login";
+      return NextResponse.redirect(loginUrl);
+    }
+
+    if (user && pathname === "/account/login") {
+      const accountUrl = request.nextUrl.clone();
+      accountUrl.pathname = "/account";
+      return NextResponse.redirect(accountUrl);
+    }
   }
 
   return response;

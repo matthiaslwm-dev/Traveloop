@@ -3,26 +3,25 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getSiteUrl, getStripe, isPaymentsBypassEnabled, siteIsPubliclyReachable } from "@/lib/stripe";
 import { PASS_CURRENCY, getPassTier } from "@/app/data/passes";
-import { fulfillPassOrder, type PassOrder } from "@/lib/fulfillment";
+import { fulfillPassOrder, type PassOrder, type PassOrderItem } from "@/lib/fulfillment";
+import { parseRegistration } from "@/lib/registration";
+import { insertCheckoutDraft, type DraftItem } from "@/lib/checkout-drafts-db";
 
 export const runtime = "nodejs";
 
-const MAX_QUANTITY = 10;
-
-/** Accepts only a whole number of passes within the allowed range; anything else falls back to 1. */
-function parseQuantity(value: unknown): number {
-  if (typeof value !== "number" || !Number.isInteger(value)) return 1;
-  return Math.min(Math.max(value, 1), MAX_QUANTITY);
-}
-
-function isValidEmail(value: unknown): value is string {
-  return typeof value === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
+const MAX_ITEMS = 20;
 
 /**
- * Creates a Stripe Checkout Session for a single pass tier and returns its
- * hosted-page URL. The browser sends only a tier key — the price is looked up
- * server-side, so a tampered request can't change what gets charged.
+ * Creates a Stripe Checkout Session for a cart of one or more passes and
+ * returns its hosted-page URL. The browser sends only tier keys — prices are
+ * looked up server-side, so a tampered request can't change what gets
+ * charged. Tiers can be mixed in one cart (e.g. 2 Gold + 3 Silver).
+ *
+ * Each pass needs its own tourist-registration/insurance details. Those are
+ * too large (and too many, for a big cart) to fit in Stripe's metadata, so
+ * they're written to a short-lived `checkout_drafts` row instead and only its
+ * id rides in session metadata. An abandoned checkout leaves that draft row
+ * behind but nothing else — no order, no registration.
  */
 export async function POST(request: Request) {
   let body: unknown;
@@ -32,21 +31,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Expected a JSON body." }, { status: 400 });
   }
 
-  const { passKey, quantity, customer } = (body ?? {}) as {
-    passKey?: unknown;
-    quantity?: unknown;
-    customer?: { name?: unknown; email?: unknown; phone?: unknown };
-  };
+  const { items: rawItems } = (body ?? {}) as { items?: unknown };
 
-  const tier = getPassTier(passKey);
-  if (!tier) {
-    return NextResponse.json({ error: "Unknown pass tier." }, { status: 400 });
+  if (!Array.isArray(rawItems) || rawItems.length === 0) {
+    return NextResponse.json({ error: "Your cart is empty." }, { status: 400 });
+  }
+  if (rawItems.length > MAX_ITEMS) {
+    return NextResponse.json({ error: `A single order can include at most ${MAX_ITEMS} passes.` }, { status: 400 });
   }
 
-  const parsedQuantity = parseQuantity(quantity);
-  const customerName = typeof customer?.name === "string" ? customer.name.trim() : "";
-  const customerEmail = typeof customer?.email === "string" ? customer.email.trim() : "";
-  const customerPhone = typeof customer?.phone === "string" ? customer.phone.trim() : "";
+  const items: DraftItem[] = [];
+  for (const raw of rawItems) {
+    const { passKey, registration } = (raw ?? {}) as { passKey?: unknown; registration?: unknown };
+
+    const tier = getPassTier(passKey);
+    if (!tier) {
+      return NextResponse.json({ error: "Unknown pass tier." }, { status: 400 });
+    }
+
+    const parsed = parseRegistration(registration);
+    if (!parsed.ok) {
+      return NextResponse.json({ error: parsed.error }, { status: 400 });
+    }
+
+    items.push({
+      passKey: tier.key,
+      passName: tier.name,
+      unitAmountCents: tier.priceCents,
+      registration: parsed.value,
+    });
+  }
 
   const siteUrl = getSiteUrl();
 
@@ -54,20 +68,17 @@ export async function POST(request: Request) {
   // directly instead of redirecting to Stripe, so the buyer flow — order
   // record, confirmation email, invoice — can be exercised end-to-end.
   if (isPaymentsBypassEnabled()) {
-    if (!isValidEmail(customerEmail)) {
-      return NextResponse.json({ error: "A valid email is required." }, { status: 400 });
-    }
-
+    // The form no longer collects an email — Stripe does — so the bypass
+    // needs one from the environment to exercise account creation locally.
     const order: PassOrder = {
       sessionId: `cs_bypass_${randomUUID()}`,
-      passKey: tier.key,
-      passName: tier.name,
-      quantity: parsedQuantity,
-      amountTotal: tier.priceCents * parsedQuantity,
+      draftId: null,
+      items,
+      amountTotal: items.reduce((sum, item) => sum + item.unitAmountCents, 0),
       currency: PASS_CURRENCY,
-      customerEmail,
-      customerName: customerName || null,
-      customerPhone: customerPhone || null,
+      customerEmail: process.env.PAYMENTS_TEST_EMAIL ?? "test@example.com",
+      customerName: items[0].registration.fullName,
+      customerPhone: null,
       paymentIntentId: null,
     };
 
@@ -87,34 +98,20 @@ export async function POST(request: Request) {
   }
 
   try {
+    const draftId = await insertCheckoutDraft(items);
+
+    const lineItems = buildLineItems(items, siteUrl);
+
     const session = await getStripe().checkout.sessions.create({
       mode: "payment",
       submit_type: "pay",
       locale: "auto",
-      ...(isValidEmail(customerEmail) ? { customer_email: customerEmail } : {}),
-      line_items: [
-        {
-          quantity: parsedQuantity,
-          adjustable_quantity: { enabled: true, minimum: 1, maximum: MAX_QUANTITY },
-          price_data: {
-            currency: PASS_CURRENCY,
-            unit_amount: tier.priceCents,
-            product_data: {
-              name: `Traveloop ${tier.name} Pass`,
-              description: tier.highlights.join(" · ").slice(0, 500),
-              // Stripe fetches this itself, so only send it when the host is reachable.
-              ...(siteIsPubliclyReachable()
-                ? { images: [`${siteUrl}/traveloop-logo.webp`] }
-                : {}),
-            },
-          },
-        },
-      ],
+      line_items: lineItems,
       // Carried through to the webhook, which is where fulfilment happens.
-      metadata: { passKey: tier.key, passName: tier.name },
+      metadata: { draftId },
       payment_intent_data: {
-        metadata: { passKey: tier.key, passName: tier.name },
-        description: `Traveloop ${tier.name} Pass`,
+        metadata: { draftId },
+        description: describeCart(items),
       },
       billing_address_collection: "auto",
       phone_number_collection: { enabled: true },
@@ -144,4 +141,42 @@ export async function POST(request: Request) {
       { status: isConfigError ? 503 : 500 }
     );
   }
+}
+
+/** One Stripe line item per distinct tier in the cart, quantity = how many of that tier. */
+function buildLineItems(
+  items: PassOrderItem[],
+  siteUrl: string
+): Stripe.Checkout.SessionCreateParams.LineItem[] {
+  const byTier = new Map<string, { item: PassOrderItem; quantity: number }>();
+
+  for (const item of items) {
+    const existing = byTier.get(item.passKey);
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      byTier.set(item.passKey, { item, quantity: 1 });
+    }
+  }
+
+  const tier = (key: string) => getPassTier(key);
+
+  return Array.from(byTier.values()).map(({ item, quantity }) => ({
+    quantity,
+    price_data: {
+      currency: PASS_CURRENCY,
+      unit_amount: item.unitAmountCents,
+      product_data: {
+        name: `Traveloop ${item.passName} Pass`,
+        description: tier(item.passKey)?.highlights.join(" · ").slice(0, 500),
+        // Stripe fetches this itself, so only send it when the host is reachable.
+        ...(siteIsPubliclyReachable() ? { images: [`${siteUrl}/traveloop-logo.webp`] } : {}),
+      },
+    },
+  }));
+}
+
+function describeCart(items: DraftItem[]): string {
+  if (items.length === 1) return `Traveloop ${items[0].passName} Pass`;
+  return `${items.length} Traveloop Passes`;
 }

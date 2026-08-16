@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAllOrders } from "@/lib/orders-db";
@@ -62,6 +63,14 @@ export default async function AdminOrdersPage() {
                   <td>{order.customerPhone ?? "—"}</td>
                   <td className="admin-table-mono">{order.sessionId}</td>
                   <td>
+                    <Link
+                      className="admin-icon-button"
+                      href={`/admin/orders/${order.sessionId}`}
+                      title="View registrations"
+                      aria-label="View registrations"
+                    >
+                      <Icon name="users" />
+                    </Link>
                     <a
                       className="admin-icon-button"
                       href={`/api/orders/${order.sessionId}/invoice`}

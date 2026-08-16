@@ -172,10 +172,9 @@ export const passPerkCategories: PassPerkCategory[] = [
     description:
       "Learn the basics of lion dance with authentic instruments and a traditional lion head. Sessions run Tuesday & Thursday 8:00–10:00 PM and Sunday 1:00–3:00 PM. Children aged 5 and under join free.",
     tierNotes: {
-      silver: "25% off · MYR 600/pax (reg. MYR 800) · Groups of 2–4: MYR 1,200",
-      gold: "25% off · MYR 600/pax (reg. MYR 800) · Groups of 2–4: MYR 1,200",
-      platinum:
-        "75% off · MYR 200/pax (reg. MYR 800) · Groups of 2–4: MYR 400 · Additional participant: MYR 100/pax",
+      silver: "25% off · Groups of 2–4: MYR 1,200 · Additional participant: MYR 100/pax",
+      gold: "25% off · Groups of 2–4: MYR 1,200 · Additional participant: MYR 100/pax",
+      platinum: "75% off · Groups of 2–4: MYR 400 · Additional participant: MYR 100/pax",
     },
   },
   {
@@ -218,7 +217,7 @@ export const passPerkCategories: PassPerkCategory[] = [
     img: "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=1000&q=85",
     title: "Private photography session",
     description:
-      "A 90-minute private photoshoot with a professional photographer around Penang's Heritage Zone or Batu Ferringhi hotels, plus 5 complimentary high-resolution photos and a highlight reel.",
+      "A 90-minute private photoshoot with a professional photographer around Penang's Heritage Zone or Batu Ferringhi hotels, plus 5 complimentary high-resolution photos and a highlight reel. Runs Saturday 8:30–10:00 AM and 10:00–11:30 AM.",
     tierNotes: {
       platinum: "From MYR 150 for 10 digital photos · Book at least 3 days ahead",
     },

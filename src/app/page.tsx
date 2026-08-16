@@ -41,11 +41,11 @@ const whyHighlights = [
   {
     img: "/privileges.png",
     icon: "coins",
-    headline: "Save More",
+    headline: "One Pass. More Benefits",
     tag: "MYR 18,000+",
-    title: "Worth of Travel Privileges",
+    title: "Exclusive Travel Privileges",
     body:
-      "Unlock exclusive savings on dining, shopping, attractions and experiences at over 1,000 partner locations across Malaysia.",
+      "Access exclusive partner benefits, special offers and unique experiences with one Traveloop Pass.",
   },
   {
     img: "/local.png",
@@ -54,16 +54,16 @@ const whyHighlights = [
     tag: "40+",
     title: "Trusted Local Partners",
     body:
-      "Discover authentic cultural experiences and hidden local gems through carefully selected partners across Malaysia.",
+      "Explore Local Experiences and hidden gems beyond ordinary sightseeing.",
   },
   {
     img: "/tokio.png",
     icon: "shield",
     headline: "Travel Worry-Free",
     tag: "Tokio Marine",
-    title: "Travel Insurance Included",
+    title: "Personal Accident Protection",
     body:
-      "Enjoy your trip with comprehensive travel protection included from arrival to departure.",
+      "Enjoy your journey in Malaysia with Personal Accident coverage and PA Medical Expense benefits provided by our insurance partner.",
   },
 ];
 
@@ -74,7 +74,12 @@ const faqItems = [
   {
     question: "Is the pass refundable?",
     answer:
-      "Unused passes can be refunded up to 7 days before your first booked session. Full terms will be confirmed before launch.",
+      "Please contact Traveloop for support. We can assist with card replacement for lost or damaged cards. Refunds are not available after purchase.",
+  },
+  {
+    question: "Is Traveloop Card a travel insurance policy?",
+    answer:
+      "No. The Traveloop Card includes Personal Accident and Personal Accident Medical Expense benefits provided through our insurance partner, subject to applicable terms and conditions.",
   },
   {
     question: "How long is my pass valid?",
@@ -110,7 +115,6 @@ export default function Home() {
     "Kuala Lumpur": { id: "cvT7CyFJ76I", title: "Kuala Lumpur — Traveloop" },
     Langkawi: { id: "l1YiY-OaS9I", title: "Langkawi — Traveloop" },
     Penang: { id: "4GUPqwMWDUY", title: "Penang — Traveloop" },
-    "Cameron Highlands": { id: "bjFpApWzs4k", title: "Cameron Highlands — Traveloop" },
   };
 
   function playFilm(videoId: string, title: string) {
@@ -243,11 +247,11 @@ export default function Home() {
 
         <section className="arrival section-light" id="discover" data-nav="light">
           <div className="section-heading centered reveal">
-            <h2>Discover the many faces of Malaysia.</h2>
+            <h2>Discover Malaysia Beyond Sightseeing.</h2>
             <p>
-              From iconic landmarks and vibrant cities to authentic cultural
-              experiences and local flavours, discover the stories,
-              traditions, and moments that make Malaysia truly unforgettable.
+              From vibrant cities and iconic landmarks to authentic cultural
+              experiences and local connections, uncover the stories,
+              traditions, and memorable moments that bring Malaysia to life.
             </p>
             <p className="discover-hint">
               <span>▶</span> Tap a card to watch it come to life
@@ -257,29 +261,7 @@ export default function Home() {
           <div className="discover-grid">
             <button
               type="button"
-              className="discover-tile tile-city reveal"
-              onClick={() =>
-                playFilm(destinationVideos["Kuala Lumpur"].id, destinationVideos["Kuala Lumpur"].title)
-              }
-              aria-label="Watch a video of Kuala Lumpur"
-            >
-              <span className="discover-play">▶</span>
-              <span className="discover-tag">City Lights</span>
-              <span className="discover-place">Kuala Lumpur</span>
-            </button>
-            <button
-              type="button"
-              className="discover-tile tile-island reveal delay-1"
-              onClick={() => playFilm(destinationVideos.Langkawi.id, destinationVideos.Langkawi.title)}
-              aria-label="Watch a video of Langkawi"
-            >
-              <span className="discover-play">▶</span>
-              <span className="discover-tag">Island Shores</span>
-              <span className="discover-place">Langkawi</span>
-            </button>
-            <button
-              type="button"
-              className="discover-tile tile-heritage reveal delay-2"
+              className="discover-tile tile-heritage reveal"
               onClick={() => playFilm(destinationVideos.Penang.id, destinationVideos.Penang.title)}
               aria-label="Watch a video of Penang"
             >
@@ -289,18 +271,23 @@ export default function Home() {
             </button>
             <button
               type="button"
-              className="discover-tile tile-hilltop reveal delay-3"
-              onClick={() =>
-                playFilm(
-                  destinationVideos["Cameron Highlands"].id,
-                  destinationVideos["Cameron Highlands"].title
-                )
-              }
-              aria-label="Watch a video of Cameron Highlands"
+              className="discover-tile tile-island is-soon reveal delay-1"
+              disabled
+              aria-label="Langkawi — coming soon"
             >
-              <span className="discover-play">▶</span>
-              <span className="discover-tag">Hilltop Escapes</span>
-              <span className="discover-place">Cameron Highlands</span>
+              <span className="discover-tag">Island Shores</span>
+              <span className="discover-place">Langkawi</span>
+              <span className="discover-soon-badge">Coming soon</span>
+            </button>
+            <button
+              type="button"
+              className="discover-tile tile-city is-soon reveal delay-2"
+              disabled
+              aria-label="Kuala Lumpur — coming soon"
+            >
+              <span className="discover-tag">City Lights</span>
+              <span className="discover-place">Kuala Lumpur</span>
+              <span className="discover-soon-badge">Coming soon</span>
             </button>
           </div>
 
@@ -333,7 +320,7 @@ export default function Home() {
           )}
           <div className="experience-shade" aria-hidden="true"></div>
           <div className="experience-copy reveal" ref={lionCopyRef}>
-            <p className="experience-number">01 / 03</p>
+            <p className="experience-number">01 / 03 · Chinese Culture</p>
             <h2>
               Feel the rhythm
               <br />
@@ -367,7 +354,7 @@ export default function Home() {
           )}
           <div className="experience-shade" aria-hidden="true"></div>
           <div className="experience-copy reveal" ref={batikCopyRef}>
-            <p className="experience-number">02 / 03</p>
+            <p className="experience-number">02 / 03 · Malay Culture</p>
             <h2>
               Batik Painting
               <br />
@@ -403,7 +390,7 @@ export default function Home() {
           )}
           <div className="experience-shade" aria-hidden="true"></div>
           <div className="experience-copy reveal" ref={indianCopyRef}>
-            <p className="experience-number">03 / 03</p>
+            <p className="experience-number">03 / 03 · Indian Culture</p>
             <h2>
               Experience Malaysia&apos;s
               <br />
@@ -466,16 +453,18 @@ export default function Home() {
             <div className="why-hero-copy">
               <p className="eyebrow">Why Choose Traveloop</p>
               <h2>
-                Experience More.
+                Every Journey Deserves
                 <br />
-                <em>Plan Less.</em>
+                <em>a Story.</em>
               </h2>
               <p>
-                Handpicked cultural experiences, exclusive dining and shopping
-                privileges, trusted local partners, complimentary travel
-                protection, and unforgettable moments—
+                At Traveloop Malaysia, we believe travel is more than just
+                visiting places, it is about the moments, connections, and
+                memories created along the way. Through authentic Malaysian
+                cultural experiences, local discoveries, and meaningful
+                encounters, we help travellers turn every journey into{" "}
                 <span className="gradient-highlight">
-                  all included in one simple pass
+                  a story worth remembering
                 </span>
                 .
               </p>
@@ -562,11 +551,7 @@ export default function Home() {
         <section className="what section-cream" id="what" data-nav="light">
           <div className="section-heading centered reveal">
             <p className="eyebrow">Experience Malaysia with Traveloop</p>
-            <h2>
-              One pass.
-              <br />
-              <em>Everything included.</em>
-            </h2>
+            <h2>Everything You Need for a More Meaningful Journey</h2>
             <p>
               Everything has been carefully curated, from authentic cultural
               experiences to exclusive local deals,{" "}

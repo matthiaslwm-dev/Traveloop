@@ -1,6 +1,35 @@
 import { Resend } from "resend";
 import type { StoredOrder } from "./orders-db";
-import { buildInvoiceHtml } from "./invoice";
+import type { StoredBooking } from "./experience-bookings-db";
+import type { PassOrderItem } from "./fulfillment";
+import { buildInvoicePdf, invoiceLineItemsFor } from "./invoice";
+import { formatDateLong, formatPrice, formatTimeRange } from "@/app/data/experiences";
+
+/** "Gold Pass" for a single-pass order, "3 passes" for a multi-pass one — matches the order summary. */
+function passSummary(order: StoredOrder): string {
+  return order.quantity > 1 ? order.passName : `${order.passName} Pass`;
+}
+
+/** One row per registrant — who each pass in the order belongs to. */
+function registrantsTable(items: PassOrderItem[]): string {
+  if (items.length <= 1) return "";
+
+  const rows = items
+    .map(
+      (item) => `
+        <tr>
+          <td style="padding: 8px 0; color: #6b6b6b; width: 45%;">${item.passName} Pass</td>
+          <td style="padding: 8px 0; font-weight: 600; text-align: right;">${item.registration.fullName}</td>
+        </tr>`
+    )
+    .join("");
+
+  return `
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
+      ${rows}
+    </table>
+  `;
+}
 
 let cached: Resend | null = null;
 
@@ -12,14 +41,64 @@ function getResend(): Resend | null {
   return cached;
 }
 
-function confirmationHtml(order: StoredOrder): string {
+function confirmationHtml(order: StoredOrder, items: PassOrderItem[]): string {
+  const loginUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/account/login`;
+
   return `
     <div style="font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #1a1a1a; max-width: 560px; margin: 0 auto;">
-      <h1 style="font-size: 20px;">Thanks for your purchase, ${order.customerName?.split(" ")[0] ?? "traveller"}!</h1>
-      <p>Your Traveloop <strong>${order.passName} Pass</strong> (x${order.quantity}) is confirmed.</p>
-      <p>Total paid: <strong>${order.currency.toUpperCase()} ${(order.amountTotal / 100).toFixed(2)}</strong></p>
-      <p>Order reference: <code>${order.sessionId}</code><br/>Invoice: <code>${order.invoiceNumber}</code></p>
-      <p>Your invoice is attached to this email. Quote your order reference if you contact us.</p>
+      <div style="background: #D72936; padding: 28px 32px; border-radius: 16px 16px 0 0;">
+        <p style="margin: 0; color: rgba(255,255,255,.8); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;">Traveloop</p>
+        <h1 style="margin: 8px 0 0; color: white; font-size: 22px;">Thanks for your purchase, ${order.customerName?.split(" ")[0] ?? "traveller"}!</h1>
+      </div>
+      <div style="border: 1px solid #eee; border-top: none; padding: 28px 32px; border-radius: 0 0 16px 16px;">
+        <p>Your Traveloop <strong>${passSummary(order)}</strong> ${order.quantity > 1 ? "are" : "is"} confirmed.</p>
+        ${registrantsTable(items)}
+        <p>Total paid: <strong>${order.currency.toUpperCase()} ${(order.amountTotal / 100).toFixed(2)}</strong></p>
+        <p>Order reference: <code>${order.sessionId}</code><br/>Invoice: <code>${order.invoiceNumber}</code></p>
+
+        <p style="margin-top: 28px;">You can view ${order.quantity > 1 ? "these passes" : "this pass"} and your full purchase history any time in your Traveloop account.</p>
+
+        <p style="text-align: center; margin: 28px 0;">
+          <a href="${loginUrl}" style="display: inline-block; background: #D72936; color: white; text-decoration: none; font-weight: 700; font-size: 14px; padding: 14px 28px; border-radius: 999px;">Go to Customer Portal</a>
+        </p>
+
+        <p style="font-size: 13px; color: #6b6b6b;">Your invoice is attached to this email. Quote your order reference if you contact us.</p>
+      </div>
+    </div>
+  `;
+}
+
+function accountWelcomeHtml(order: StoredOrder, items: PassOrderItem[], password: string): string {
+  const loginUrl = `${process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"}/account/login`;
+  const firstName = order.customerName?.split(" ")[0] ?? "traveller";
+
+  return `
+    <div style="font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #1a1a1a; max-width: 560px; margin: 0 auto;">
+      <div style="background: #D72936; padding: 28px 32px; border-radius: 16px 16px 0 0;">
+        <p style="margin: 0; color: rgba(255,255,255,.8); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;">Traveloop</p>
+        <h1 style="margin: 8px 0 0; color: white; font-size: 22px;">Thanks for your purchase, ${firstName}!</h1>
+      </div>
+      <div style="border: 1px solid #eee; border-top: none; padding: 28px 32px; border-radius: 0 0 16px 16px;">
+        <p>Your Traveloop <strong>${passSummary(order)}</strong> ${order.quantity > 1 ? "are" : "is"} confirmed.</p>
+        ${registrantsTable(items)}
+        <p>Total paid: <strong>${order.currency.toUpperCase()} ${(order.amountTotal / 100).toFixed(2)}</strong></p>
+        <p>Order reference: <code>${order.sessionId}</code><br/>Invoice: <code>${order.invoiceNumber}</code></p>
+
+        <p style="margin-top: 28px;">We've also set up a Traveloop account for you, so you can view your passes and purchase history any time:</p>
+
+        <div style="background: #f7f5f2; border-radius: 12px; padding: 18px 20px; margin: 16px 0;">
+          <p style="margin: 0 0 8px; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #6b6b6b;">Your login</p>
+          <p style="margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px;">Email: ${order.customerEmail}</p>
+          <p style="margin: 4px 0 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px;">Password: ${password}</p>
+        </div>
+
+        <p style="text-align: center; margin: 28px 0;">
+          <a href="${loginUrl}" style="display: inline-block; background: #D72936; color: white; text-decoration: none; font-weight: 700; font-size: 14px; padding: 14px 28px; border-radius: 999px;">Sign in to your account</a>
+        </p>
+
+        <p style="font-size: 13px; color: #6b6b6b;">For your security, we recommend changing this password after you sign in for the first time.</p>
+        <p style="font-size: 13px; color: #6b6b6b;">Your invoice is attached to this email. Quote your order reference if you contact us.</p>
+      </div>
     </div>
   `;
 }
@@ -31,14 +110,13 @@ function confirmationHtml(order: StoredOrder): string {
  * isn't set, so the checkout flow can be exercised end-to-end without an
  * email provider account.
  */
-export async function sendOrderConfirmationEmail(order: StoredOrder): Promise<void> {
-  const invoiceHtml = buildInvoiceHtml(order);
+export async function sendOrderConfirmationEmail(order: StoredOrder, items: PassOrderItem[]): Promise<void> {
   const resend = getResend();
 
   if (!resend) {
     console.info("[email] RESEND_API_KEY not set — logging email instead of sending:", {
       to: order.customerEmail,
-      subject: `Your Traveloop ${order.passName} Pass — ${order.invoiceNumber}`,
+      subject: `Your Traveloop ${passSummary(order)} — ${order.invoiceNumber}`,
       invoiceNumber: order.invoiceNumber,
     });
     return;
@@ -50,16 +128,17 @@ export async function sendOrderConfirmationEmail(order: StoredOrder): Promise<vo
   }
 
   const from = process.env.EMAIL_FROM ?? "Traveloop <onboarding@resend.dev>";
+  const invoicePdf = await buildInvoicePdf(order, invoiceLineItemsFor(order, items));
 
   const { error } = await resend.emails.send({
     from,
     to: order.customerEmail,
-    subject: `Your Traveloop ${order.passName} Pass — ${order.invoiceNumber}`,
-    html: confirmationHtml(order),
+    subject: `Your Traveloop ${passSummary(order)} — ${order.invoiceNumber}`,
+    html: confirmationHtml(order, items),
     attachments: [
       {
-        filename: `${order.invoiceNumber}.html`,
-        content: Buffer.from(invoiceHtml).toString("base64"),
+        filename: `${order.invoiceNumber}.pdf`,
+        content: invoicePdf.toString("base64"),
       },
     ],
   });
@@ -69,4 +148,257 @@ export async function sendOrderConfirmationEmail(order: StoredOrder): Promise<vo
     // order is already recorded, and the invoice is viewable via its own route.
     console.error(`[email] Failed to send confirmation for ${order.sessionId}:`, error);
   }
+}
+
+/**
+ * Sent once, on the buyer's first purchase: thanks them, hands over their
+ * auto-generated account credentials, and links to the customer portal.
+ * Repeat purchases get the plain sendOrderConfirmationEmail instead — the
+ * account already exists, so there's no password to hand over again.
+ */
+export async function sendAccountWelcomeEmail(
+  order: StoredOrder,
+  items: PassOrderItem[],
+  password: string
+): Promise<void> {
+  const resend = getResend();
+
+  if (!resend) {
+    console.info("[email] RESEND_API_KEY not set — logging welcome email instead of sending:", {
+      to: order.customerEmail,
+      subject: `Welcome to Traveloop — your ${passSummary(order)} ${order.quantity > 1 ? "are" : "is"} confirmed`,
+      invoiceNumber: order.invoiceNumber,
+      generatedPassword: password,
+    });
+    return;
+  }
+
+  if (!order.customerEmail) {
+    console.warn(`[email] Order ${order.sessionId} has no customer email — skipping welcome send.`);
+    return;
+  }
+
+  const from = process.env.EMAIL_FROM ?? "Traveloop <onboarding@resend.dev>";
+  const invoicePdf = await buildInvoicePdf(order, invoiceLineItemsFor(order, items));
+
+  const { error } = await resend.emails.send({
+    from,
+    to: order.customerEmail,
+    subject: `Welcome to Traveloop — your ${passSummary(order)} ${order.quantity > 1 ? "are" : "is"} confirmed`,
+    html: accountWelcomeHtml(order, items, password),
+    attachments: [
+      {
+        filename: `${order.invoiceNumber}.pdf`,
+        content: invoicePdf.toString("base64"),
+      },
+    ],
+  });
+
+  if (error) {
+    console.error(`[email] Failed to send welcome email for ${order.sessionId}:`, error);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Cultural-experience bookings                                        */
+/* ------------------------------------------------------------------ */
+
+function siteUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+}
+
+/** The red header + bordered body the pass emails above use, factored out. */
+function emailShell(heading: string, body: string): string {
+  return `
+    <div style="font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; color: #1a1a1a; max-width: 560px; margin: 0 auto;">
+      <div style="background: #D72936; padding: 28px 32px; border-radius: 16px 16px 0 0;">
+        <p style="margin: 0; color: rgba(255,255,255,.8); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;">Traveloop</p>
+        <h1 style="margin: 8px 0 0; color: white; font-size: 22px;">${heading}</h1>
+      </div>
+      <div style="border: 1px solid #eee; border-top: none; padding: 28px 32px; border-radius: 0 0 16px 16px;">
+        ${body}
+      </div>
+    </div>
+  `;
+}
+
+/** The date / time / venue / headcount block shared by every booking email. */
+function bookingDetails(booking: StoredBooking): string {
+  const rows: [string, string][] = [
+    ["Experience", booking.experienceName],
+    ["Date", formatDateLong(booking.sessionDate)],
+    ["Time", formatTimeRange(booking.startMinutes, booking.endMinutes)],
+    ["Venue", booking.location ?? "Confirmed by our team"],
+    [
+      "Participants",
+      `${booking.participants}${
+        booking.childrenCount > 0 ? ` + ${booking.childrenCount} child (free)` : ""
+      }`,
+    ],
+    ["Payable at the venue", formatPrice(booking.quotedAmountCents)],
+    ["Reference", booking.reference],
+  ];
+
+  return `
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
+      ${rows
+        .map(
+          ([label, value]) => `
+        <tr>
+          <td style="padding: 8px 0; color: #6b6b6b; width: 45%;">${label}</td>
+          <td style="padding: 8px 0; font-weight: 600; text-align: right;">${value}</td>
+        </tr>`
+        )
+        .join("")}
+    </table>
+  `;
+}
+
+const PORTAL_BUTTON = `
+  <p style="text-align: center; margin: 28px 0;">
+    <a href="${siteUrl()}/account/bookings" style="display: inline-block; background: #D72936; color: white; text-decoration: none; font-weight: 700; font-size: 14px; padding: 14px 28px; border-radius: 999px;">View my bookings</a>
+  </p>
+`;
+
+/**
+ * Sends a booking email, or logs it when Resend isn't configured — the same
+ * fallback the pass emails use, so the booking flow is testable without an
+ * email provider. Never throws: a failed send must not undo a real booking.
+ */
+async function sendBookingEmail(
+  to: string | null,
+  subject: string,
+  html: string,
+  context: string
+): Promise<void> {
+  const resend = getResend();
+
+  if (!resend) {
+    console.info("[email] RESEND_API_KEY not set — logging booking email instead of sending:", {
+      to,
+      subject,
+    });
+    return;
+  }
+
+  if (!to) {
+    console.warn(`[email] No recipient for ${context} — skipping send.`);
+    return;
+  }
+
+  const { error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "Traveloop <onboarding@resend.dev>",
+    to,
+    subject,
+    html,
+  });
+
+  if (error) {
+    console.error(`[email] Failed to send ${context}:`, error);
+  }
+}
+
+/** Sent the moment a booking is placed: what they asked for, and what happens next. */
+export async function sendBookingRequestEmail(
+  booking: StoredBooking,
+  to: string | null
+): Promise<void> {
+  const html = emailShell(
+    "Your booking is in.",
+    `
+      <p>Thanks — we've received your booking for the <strong>${booking.experienceName}</strong>.</p>
+      ${bookingDetails(booking)}
+      <p>Our team is confirming the session now. You'll get a second email once it's locked in${
+        booking.location ? "" : ", including the exact venue"
+      } — usually within one working day.</p>
+      <p style="font-size: 13px; color: #6b6b6b;">Payment is made at the venue on the day. Nothing has been charged.</p>
+      ${PORTAL_BUTTON}
+    `
+  );
+
+  await sendBookingEmail(
+    to,
+    `Booking received — ${booking.experienceName}, ${formatDateLong(booking.sessionDate)}`,
+    html,
+    `booking request ${booking.reference}`
+  );
+}
+
+/** Sent when the team confirms or cancels a booking from the admin panel. */
+export async function sendBookingStatusEmail(
+  booking: StoredBooking,
+  to: string | null
+): Promise<void> {
+  const isConfirmed = booking.status === "confirmed";
+
+  const html = emailShell(
+    isConfirmed ? "You're confirmed." : "Your booking was cancelled.",
+    isConfirmed
+      ? `
+        <p>Your <strong>${booking.experienceName}</strong> is confirmed. We'll see you there.</p>
+        ${bookingDetails(booking)}
+        ${
+          booking.adminNotes
+            ? `<p style="background:#f7f5f2; border-radius:12px; padding:16px 18px; font-size:13.5px;">${booking.adminNotes}</p>`
+            : ""
+        }
+        <p style="font-size: 13px; color: #6b6b6b;">Please bring your pass and settle ${formatPrice(
+          booking.quotedAmountCents
+        )} at the venue. Need to change something? Reply to this email quoting ${booking.reference}.</p>
+        ${PORTAL_BUTTON}
+      `
+      : `
+        <p>Your booking for the <strong>${booking.experienceName}</strong> has been cancelled. You haven't been charged.</p>
+        ${bookingDetails(booking)}
+        ${
+          booking.adminNotes
+            ? `<p style="background:#f7f5f2; border-radius:12px; padding:16px 18px; font-size:13.5px;">${booking.adminNotes}</p>`
+            : ""
+        }
+        <p>Your pass benefits are unaffected — you're welcome to book another session any time.</p>
+        ${PORTAL_BUTTON}
+      `
+  );
+
+  await sendBookingEmail(
+    to,
+    isConfirmed
+      ? `Confirmed — ${booking.experienceName}, ${formatDateLong(booking.sessionDate)}`
+      : `Cancelled — ${booking.experienceName}, ${formatDateLong(booking.sessionDate)}`,
+    html,
+    `booking status ${booking.reference}`
+  );
+}
+
+/**
+ * Heads-up to the operations inbox that something needs confirming. Skipped
+ * silently when BOOKINGS_NOTIFICATION_EMAIL isn't configured — the admin panel
+ * lists every booking regardless, so this is a convenience, not the record.
+ */
+export async function sendBookingAdminAlert(
+  booking: StoredBooking,
+  customerEmail: string | null
+): Promise<void> {
+  const to = process.env.BOOKINGS_NOTIFICATION_EMAIL;
+  if (!to) return;
+
+  const html = emailShell(
+    "New experience booking",
+    `
+      <p><strong>${booking.experienceName}</strong> booked by ${customerEmail ?? "a customer"} on a ${
+        booking.passKey
+      } pass.</p>
+      ${bookingDetails(booking)}
+      ${
+        booking.customerNotes
+          ? `<p style="background:#f7f5f2; border-radius:12px; padding:16px 18px; font-size:13.5px;"><strong>Customer note:</strong> ${booking.customerNotes}</p>`
+          : ""
+      }
+      <p style="text-align: center; margin: 28px 0;">
+        <a href="${siteUrl()}/admin/bookings" style="display: inline-block; background: #D72936; color: white; text-decoration: none; font-weight: 700; font-size: 14px; padding: 14px 28px; border-radius: 999px;">Open admin</a>
+      </p>
+    `
+  );
+
+  await sendBookingEmail(to, `New booking — ${booking.reference}`, html, `admin alert ${booking.reference}`);
 }

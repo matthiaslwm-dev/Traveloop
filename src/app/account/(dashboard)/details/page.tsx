@@ -8,7 +8,7 @@ import ProfileSection from "./ProfileSection";
 import PasswordForm from "./PasswordForm";
 
 export const metadata: Metadata = {
-  title: "My details — Traveloop",
+  title: "My details",
   robots: { index: false, follow: false },
 };
 

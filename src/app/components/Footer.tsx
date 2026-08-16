@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "./Icons";
 
@@ -6,7 +7,7 @@ export default function Footer() {
     <footer>
       <div className="footer-top">
         <div className="footer-brand">
-          <img src="/traveloop-logo.webp" alt="Traveloop" />
+          <Image src="/traveloop-logo.webp" alt="Traveloop" width={1280} height={345} />
           <p>Experience Malaysia like never before.</p>
           <div className="footer-links">
             <span
@@ -39,7 +40,7 @@ export default function Footer() {
                 Pulau Pinang, Malaysia
               </span>
             </span>
-            <a className="footer-contact-row" href="tel:+60113949288">
+            <a className="footer-contact-row" href="tel:+601139492888">
               <span className="footer-contact-icon">
                 <Icon name="phone" />
               </span>

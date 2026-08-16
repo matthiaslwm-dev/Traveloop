@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useActionState, useState, type ReactNode } from "react";
+import { useFormStatus } from "react-dom";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { submitContactForm, type ContactFormState } from "./actions";
 
 function Icon({ name }: { name: string }) {
   const svgProps = {
@@ -44,33 +48,134 @@ const subjects = [
   "Booking support",
 ] as const;
 
-export default function ContactPage() {
-  const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [subject, setSubject] = useState<(typeof subjects)[number]>(subjects[0]);
-  const [message, setMessage] = useState("");
+const INITIAL_STATE: ContactFormState = { status: "idle" };
 
-  useEffect(() => {
-    const pass = new URLSearchParams(window.location.search).get("pass");
-    if (!pass) return;
-    setSubject("Pass & pricing");
-    setMessage(
-      `Hi, I'm interested in the ${pass} Pass. Could you tell me more about how to purchase it?`
+/** Lives in its own component so it can read `pending` from the enclosing <form>. */
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      className="button primary contact-submit"
+      disabled={pending}
+      aria-busy={pending}
+    >
+      {pending ? "Sending…" : "Send Message"}
+    </button>
+  );
+}
+
+/**
+ * The form itself. Reading ?pass= needs useSearchParams, which suspends, so
+ * this sits behind a Suspense boundary in the page below.
+ */
+function ContactForm() {
+  const passParam = useSearchParams().get("pass");
+  const [state, formAction] = useActionState(submitContactForm, INITIAL_STATE);
+
+  // Prefilled from ?pass=gold, then owned by the visitor once they type.
+  const [subject, setSubject] = useState<(typeof subjects)[number]>(
+    passParam ? "Pass & pricing" : subjects[0]
+  );
+  const [message, setMessage] = useState(
+    passParam
+      ? `Hi, I'm interested in the ${passParam} Pass. Could you tell me more about how to purchase it?`
+      : ""
+  );
+
+  if (state.status === "sent") {
+    return (
+      <div className="contact-form">
+        <div className="contact-form-success" role="status">
+          <span className="contact-form-success-icon">✓</span>
+          <strong>Message sent!</strong>
+          <p>Thanks for reaching out — our team will get back to you within one business day.</p>
+        </div>
+      </div>
     );
-  }, []);
-
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!name || !email || !message) return;
-    setStatus("sending");
-    setTimeout(() => setStatus("sent"), 900);
   }
 
   return (
+    <form className="contact-form" action={formAction}>
+      {/* Honeypot — hidden from people, irresistible to bots. */}
+      <input
+        type="text"
+        name="company"
+        tabIndex={-1}
+        autoComplete="off"
+        aria-hidden="true"
+        className="contact-honeypot"
+      />
+
+      <div className="form-row">
+        <label className="form-field">
+          <span>Name</span>
+          <input
+            type="text"
+            name="name"
+            autoComplete="name"
+            placeholder="Your name"
+            maxLength={120}
+            required
+          />
+        </label>
+        <label className="form-field">
+          <span>Email</span>
+          <input
+            type="email"
+            name="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            maxLength={200}
+            required
+          />
+        </label>
+      </div>
+
+      <label className="form-field">
+        <span>Subject</span>
+        <select
+          name="subject"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value as (typeof subjects)[number])}
+        >
+          {subjects.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="form-field">
+        <span>Message</span>
+        <textarea
+          name="message"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="How can we help?"
+          rows={5}
+          maxLength={4000}
+          required
+        />
+      </label>
+
+      {state.status === "error" && (
+        <p className="checkout-error" role="alert">
+          {state.error}
+        </p>
+      )}
+
+      <SubmitButton />
+    </form>
+  );
+}
+
+export default function ContactPage() {
+  return (
     <>
       <Navbar forceScrolled />
-      <main>
+      <main id="main">
         <section className="arrival section-light contact-hero">
           <div className="section-heading centered">
             <p className="eyebrow">Contact Us</p>
@@ -142,75 +247,9 @@ export default function ContactPage() {
                 </p>
               </div>
 
-              <form className="contact-form" onSubmit={handleSubmit}>
-                {status === "sent" ? (
-                  <div className="contact-form-success">
-                    <span className="contact-form-success-icon">✓</span>
-                    <strong>Message sent!</strong>
-                    <p>Thanks for reaching out — our team will get back to you soon.</p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="form-row">
-                      <label className="form-field">
-                        <span>Name</span>
-                        <input
-                          type="text"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="Your name"
-                          required
-                        />
-                      </label>
-                      <label className="form-field">
-                        <span>Email</span>
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          placeholder="you@example.com"
-                          required
-                        />
-                      </label>
-                    </div>
-
-                    <label className="form-field">
-                      <span>Subject</span>
-                      <select
-                        value={subject}
-                        onChange={(e) =>
-                          setSubject(e.target.value as (typeof subjects)[number])
-                        }
-                      >
-                        {subjects.map((s) => (
-                          <option key={s} value={s}>
-                            {s}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-
-                    <label className="form-field">
-                      <span>Message</span>
-                      <textarea
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                        placeholder="How can we help?"
-                        rows={5}
-                        required
-                      />
-                    </label>
-
-                    <button
-                      type="submit"
-                      className="button primary contact-submit"
-                      disabled={status === "sending"}
-                    >
-                      {status === "sending" ? "Sending…" : "Send Message"}
-                    </button>
-                  </>
-                )}
-              </form>
+              <Suspense fallback={<div className="contact-form" />}>
+                <ContactForm />
+              </Suspense>
             </div>
           </div>
         </section>

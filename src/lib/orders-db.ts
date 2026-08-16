@@ -139,6 +139,9 @@ export async function insertOrderIfNew(
   return { inserted: true, stored: toStoredOrder(updated) };
 }
 
+/** Keeps the admin orders table from loading the entire table into one request as the business grows. */
+const ADMIN_LIST_LIMIT = 500;
+
 export async function getAllOrders(): Promise<StoredOrder[]> {
   const db = getSupabase();
 
@@ -146,6 +149,7 @@ export async function getAllOrders(): Promise<StoredOrder[]> {
     .from("orders")
     .select()
     .order("created_at", { ascending: false })
+    .limit(ADMIN_LIST_LIMIT)
     .returns<OrderRow[]>();
 
   if (error) {

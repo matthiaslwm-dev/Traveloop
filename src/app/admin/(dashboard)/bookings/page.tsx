@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAllBookings, type StoredBooking } from "@/lib/experience-bookings-db";
 import { getAllOrders } from "@/lib/orders-db";
+import { isAdminUser } from "@/lib/admin-auth";
 import { isPastSession } from "@/lib/booking";
 import { setBookingStatus } from "@/app/admin/booking-actions";
 import {
@@ -13,7 +14,7 @@ import {
 } from "@/app/data/experiences";
 
 export const metadata: Metadata = {
-  title: "Experience bookings — Traveloop admin",
+  title: "Admin · Experience bookings",
   robots: { index: false, follow: false },
 };
 
@@ -38,11 +39,7 @@ const ACTION_LABELS: Record<StoredBooking["status"], string> = {
 
 export default async function AdminBookingsPage({ searchParams }: BookingsPageProps) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!(await isAdminUser(supabase))) {
     redirect("/admin/login");
   }
 

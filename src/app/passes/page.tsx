@@ -69,7 +69,7 @@ export default function PassesPage() {
   return (
     <>
       <Navbar forceScrolled />
-      <main>
+      <main id="main">
         <section className="passes-hero">
           <div className="passes-hero-glow" aria-hidden="true" />
           <div className="passes-hero-inner">

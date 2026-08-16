@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -13,10 +14,10 @@ export function generateStaticParams() {
 export async function generateMetadata(props: PageProps<"/blogs/[slug]">): Promise<Metadata> {
   const { slug } = await props.params;
   const post = getPostBySlug(slug);
-  if (!post?.body) return { title: "Article not found — Traveloop" };
+  if (!post?.body) return { title: "Article not found" };
 
   return {
-    title: `${post.title} — Traveloop`,
+    title: post.title,
     description: post.excerpt,
     openGraph: {
       type: "article",
@@ -38,8 +39,17 @@ function Block({ block }: { block: BlogBlock }) {
     case "subheading":
       return <h3>{block.text}</h3>;
     case "image":
-      // eslint-disable-next-line @next/next/no-img-element
-      return <img className="article-image" src={block.src} alt={block.alt} loading="lazy" />;
+      return (
+        <div className="article-image-wrap">
+          <Image
+            className="article-image"
+            src={block.src}
+            alt={block.alt}
+            fill
+            sizes="(max-width: 720px) 100vw, 720px"
+          />
+        </div>
+      );
     case "list":
       return (
         <ul className="article-list">
@@ -77,7 +87,9 @@ function Block({ block }: { block: BlogBlock }) {
 function RelatedCard({ post }: { post: BlogPost }) {
   const inner = (
     <>
-      <div className="blog-card-image" style={{ backgroundImage: `url('${post.img}')` }} />
+      <div className="blog-card-image">
+        <Image src={post.img} alt="" fill sizes="(max-width: 862px) 100vw, 33vw" />
+      </div>
       <div className="blog-card-body">
         <span className="blog-tag">{post.category}</span>
         <h3>{post.title}</h3>
@@ -111,7 +123,7 @@ export default async function BlogPostPage(props: PageProps<"/blogs/[slug]">) {
   return (
     <>
       <Navbar forceScrolled />
-      <main>
+      <main id="main">
         <article>
           <header className="article-hero">
             <div className="article-hero-inner">
@@ -142,12 +154,9 @@ export default async function BlogPostPage(props: PageProps<"/blogs/[slug]">) {
             </div>
           </header>
 
-          <div
-            className="article-cover"
-            style={{ backgroundImage: `url('${post.img}')` }}
-            role="img"
-            aria-label={post.title}
-          />
+          <div className="article-cover" role="img" aria-label={post.title}>
+            <Image src={post.img} alt="" fill sizes="(max-width: 1060px) 100vw, 1000px" priority />
+          </div>
 
           <div className="article-body">
             {post.body.map((block, i) => (

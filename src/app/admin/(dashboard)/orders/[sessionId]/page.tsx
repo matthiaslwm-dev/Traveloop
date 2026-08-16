@@ -4,9 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getOrderBySessionId } from "@/lib/orders-db";
 import { getPassRegistrationsByOrder } from "@/lib/pass-registrations-db";
+import { isAdminUser } from "@/lib/admin-auth";
 
 export const metadata: Metadata = {
-  title: "Order registrations — Traveloop admin",
+  title: "Admin · Order registrations",
   robots: { index: false, follow: false },
 };
 
@@ -16,11 +17,7 @@ type OrderDetailPageProps = {
 
 export default async function AdminOrderDetailPage({ params }: OrderDetailPageProps) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!(await isAdminUser(supabase))) {
     redirect("/admin/login");
   }
 

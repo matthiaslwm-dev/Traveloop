@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { PassKey } from "../data/passes";
 
 /** The Traveloop pass artwork. Sizing comes from the wrapper (.pass-stack, .pricing-visual). */
@@ -6,7 +7,7 @@ export default function PassCard({ tierKey, name }: { tierKey: PassKey; name: st
     <div className={`pass-card tier-${tierKey}`}>
       <div className="card-shine" />
       <div className="card-top">
-        <img src="/traveloop-logo.webp" alt="" />
+        <Image src="/traveloop-logo.webp" alt="" width={1280} height={345} />
         <span>{name.toUpperCase()}</span>
       </div>
       <div className="card-chip" />

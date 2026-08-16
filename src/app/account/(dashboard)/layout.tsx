@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCustomerProfile } from "@/lib/customer-profile-db";
@@ -21,7 +22,7 @@ export default async function AccountDashboardLayout({ children }: { children: R
     <div className="account-shell">
       <header className="account-header">
         <Link className="account-header-brand" href="/">
-          <img src="/traveloop-logo.webp" alt="Traveloop" />
+          <Image src="/traveloop-logo.webp" alt="Traveloop" width={1280} height={345} />
         </Link>
 
         <div className="account-header-right">

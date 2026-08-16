@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -66,7 +67,9 @@ export default function BlogsPage() {
   const renderCard = (p: BlogPost) => {
     const inner = (
       <>
-        <div className="blog-card-image" style={{ backgroundImage: `url('${p.img}')` }} />
+        <div className="blog-card-image">
+          <Image src={p.img} alt="" fill sizes="(max-width: 862px) 100vw, 33vw" />
+        </div>
         <div className="blog-card-body">
           <span className="blog-tag">{p.category}</span>
           <h3>{p.title}</h3>
@@ -96,14 +99,13 @@ export default function BlogsPage() {
   return (
     <>
       <Navbar forceScrolled />
-      <main className="blogs-main">
+      <main id="main" className="blogs-main">
         {showSpotlight && primaryPost && (
           <section className="blog-spotlight">
             <Spotlight post={primaryPost} className="blog-spotlight-main">
-              <div
-                className="blog-spotlight-image"
-                style={{ backgroundImage: `url('${primaryPost.img}')` }}
-              />
+              <div className="blog-spotlight-image">
+                <Image src={primaryPost.img} alt="" fill priority sizes="(max-width: 862px) 100vw, 60vw" />
+              </div>
               <div className="blog-spotlight-body">
                 <span className="blog-tag on-dark">Featured · {primaryPost.category}</span>
                 <h3>{primaryPost.title}</h3>
@@ -121,10 +123,9 @@ export default function BlogsPage() {
             <div className="blog-spotlight-side">
               {secondaryPosts.map((p) => (
                 <Spotlight post={p} className="blog-side-card" key={p.slug}>
-                  <div
-                    className="blog-side-card-image"
-                    style={{ backgroundImage: `url('${p.img}')` }}
-                  />
+                  <div className="blog-side-card-image">
+                    <Image src={p.img} alt="" fill sizes="120px" />
+                  </div>
                   <div className="blog-side-card-body">
                     <span className="blog-tag">{p.category}</span>
                     <h3>{p.title}</h3>

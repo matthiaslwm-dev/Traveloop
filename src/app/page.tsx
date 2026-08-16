@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -63,9 +64,20 @@ const whyHighlights = [
     tag: "Tokio Marine",
     title: "Personal Accident Protection",
     body:
-      "Enjoy your journey in Malaysia with Personal Accident coverage and PA Medical Expense benefits provided by our insurance partner.",
+      "Gold and Platinum passes include Personal Accident coverage and PA Medical Expense benefits provided by our insurance partner.",
   },
 ];
+
+/** Mirrors the visible FAQ below so assistants and search engines read the same answers. */
+const faqJsonLd = (items: { question: string; answer: string }[]) => ({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: items.map((item) => ({
+    "@type": "Question",
+    name: item.question,
+    acceptedAnswer: { "@type": "Answer", text: item.answer },
+  })),
+});
 
 /** Cheapest tier, so the "starting from" price and its strikethrough always belong together */
 const cheapestTier = [...tierShowcase].sort((a, b) => a.priceCents - b.priceCents)[0];
@@ -194,10 +206,26 @@ export default function Home() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqItems)) }}
+      />
+
       <div className="progress" aria-hidden="true">
         <span ref={progressRef}></span>
       </div>
 
+      {/* The loader is dismissed by JS on window.load. Without this, a visitor
+          whose bundle fails — or who has JS off — sits behind a full-screen
+          overlay forever. The CSS failsafe below lifts it either way. */}
+      <noscript>
+        <style>{`
+          #loader { display: none !important; }
+          /* .reveal is faded in by an IntersectionObserver; without JS that
+             never runs, so the whole page would render blank. */
+          .reveal { opacity: 1 !important; transform: none !important; }
+        `}</style>
+      </noscript>
       <div className="loader" id="loader" ref={loaderRef}>
         <div className="loader-plane">✈</div>
         <p>Your Malaysian story begins…</p>
@@ -205,9 +233,11 @@ export default function Home() {
 
       <Navbar />
 
-      <main id="top">
+      <main id="main">
         <section className="hero section-dark" data-nav="dark">
-          <div className="hero-bg" ref={heroBgRef} aria-hidden="true"></div>
+          <div className="hero-bg" ref={heroBgRef} aria-hidden="true">
+            <Image src="/hero3.png" alt="" fill priority sizes="100vw" className="hero-bg-img" />
+          </div>
           <div className="hero-overlay" aria-hidden="true"></div>
           <div className="hero-cloud cloud-a" aria-hidden="true"></div>
           <div className="hero-cloud cloud-b" aria-hidden="true"></div>
@@ -477,10 +507,9 @@ export default function Home() {
           <div className="why-cards reveal">
             {whyHighlights.map((h, i) => (
               <article className={`why-card delay-${i + 1}`} key={h.title}>
-                <div
-                  className="why-card-bg"
-                  style={{ backgroundImage: `url('${h.img}')` }}
-                />
+                <div className="why-card-bg">
+                  <Image src={h.img} alt="" fill sizes="(max-width: 862px) 100vw, 33vw" />
+                </div>
                 <div className="why-card-overlay" />
                 <div className="why-card-content">
                   <span className="why-card-icon">
@@ -515,9 +544,12 @@ export default function Home() {
                   </div>
                   <p className="review-body">{r.body}</p>
                   <a className="review-activity" href="#experiences">
-                    <span
+                    <Image
                       className="review-activity-img"
-                      style={{ backgroundImage: `url('${r.img}')` }}
+                      src={r.img}
+                      alt=""
+                      width={44}
+                      height={44}
                     />
                     {r.activity}
                   </a>
@@ -635,7 +667,14 @@ export default function Home() {
         </section>
 
         <section className="closing section-dark" data-nav="dark">
-          <div className="closing-bg" aria-hidden="true"></div>
+          <div className="closing-bg" aria-hidden="true">
+            <Image
+              src="https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=2200&q=88"
+              alt=""
+              fill
+              sizes="100vw"
+            />
+          </div>
           <div className="closing-overlay" aria-hidden="true"></div>
           <div className="closing-content reveal">
             <h2>Your Journey Starts Here.</h2>

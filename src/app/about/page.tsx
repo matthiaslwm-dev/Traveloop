@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -66,7 +67,7 @@ export default function AboutPage() {
   return (
     <>
       <Navbar forceScrolled />
-      <main>
+      <main id="main">
         <section className="arrival section-light page-hero about-hero">
           <div className="section-heading centered">
             <p className="eyebrow">About Traveloop</p>
@@ -139,7 +140,7 @@ export default function AboutPage() {
           </div>
           <div className="team-grid">
             {team.map((m) => (
-              <article className="team-card" key={m.name}>
+              <article className="team-card" key={m.role}>
                 <span className="team-avatar">{initials(m.name)}</span>
                 <h3>{m.name}</h3>
                 <p className="team-role">{m.role}</p>
@@ -150,13 +151,14 @@ export default function AboutPage() {
         </section>
 
         <section className="closing section-dark">
-          <div
-            className="closing-bg"
-            style={{
-              backgroundImage:
-                "url('https://images.unsplash.com/photo-1664797092984-c817193dfa0f?auto=format&fit=crop&w=2200&q=88')",
-            }}
-          />
+          <div className="closing-bg">
+            <Image
+              src="https://images.unsplash.com/photo-1664797092984-c817193dfa0f?auto=format&fit=crop&w=2200&q=88"
+              alt=""
+              fill
+              sizes="100vw"
+            />
+          </div>
           <div className="closing-overlay" />
           <div className="closing-content">
             <h2>Come experience it with us.</h2>

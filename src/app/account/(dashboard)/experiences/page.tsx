@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -18,7 +19,7 @@ import {
 import { passTiers } from "@/app/data/passes";
 
 export const metadata: Metadata = {
-  title: "Cultural experiences — Traveloop",
+  title: "Cultural experiences",
   robots: { index: false, follow: false },
 };
 
@@ -99,7 +100,7 @@ export default async function ExperiencesPage() {
         {cards.map(({ experience, unlocked, passName, nextDate }) => (
           <article key={experience.key} className={`xp-card${unlocked ? "" : " is-locked"}`}>
             <div className="xp-card-media">
-              <img src={experience.image} alt="" />
+              <Image src={experience.image} alt="" fill sizes="(max-width: 720px) 100vw, 360px" />
               <span className={`xp-card-badge${unlocked ? "" : " is-locked"}`}>
                 <Icon name={unlocked ? "ticket" : "shield"} />
                 {unlocked ? `Included with ${passName}` : `${includedWith(experience)} only`}

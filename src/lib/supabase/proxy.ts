@@ -35,16 +35,20 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Customers get their own Supabase Auth accounts too, so "is signed in" is
+  // not "is the admin" — the admin session must belong to ADMIN_LOGIN_EMAIL.
+  const isAdmin = Boolean(user && user.email === process.env.ADMIN_LOGIN_EMAIL);
+
   const { pathname } = request.nextUrl;
 
   if (pathname.startsWith("/admin")) {
-    if (!user && pathname !== "/admin/login") {
+    if (!isAdmin && pathname !== "/admin/login") {
       const loginUrl = request.nextUrl.clone();
       loginUrl.pathname = "/admin/login";
       return NextResponse.redirect(loginUrl);
     }
 
-    if (user && pathname === "/admin/login") {
+    if (isAdmin && pathname === "/admin/login") {
       const adminUrl = request.nextUrl.clone();
       adminUrl.pathname = "/admin";
       return NextResponse.redirect(adminUrl);

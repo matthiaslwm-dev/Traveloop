@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -142,7 +143,7 @@ export default async function BookExperiencePage({ params }: BookExperiencePageP
       <div className="xp-book-layout">
         <aside className="xp-book-aside">
           <div className="xp-book-hero">
-            <img src={experience.image} alt="" />
+            <Image src={experience.image} alt="" fill sizes="320px" />
           </div>
           <h1>{experience.name}</h1>
           <p className="xp-book-tagline">{experience.tagline}</p>

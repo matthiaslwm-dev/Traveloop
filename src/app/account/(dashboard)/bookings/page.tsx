@@ -14,7 +14,7 @@ import {
 } from "@/app/data/experiences";
 
 export const metadata: Metadata = {
-  title: "My bookings — Traveloop",
+  title: "My bookings",
   robots: { index: false, follow: false },
 };
 

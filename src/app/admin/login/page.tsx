@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { login } from "./actions";
 
 export const metadata: Metadata = {
-  title: "Admin login — Traveloop",
+  title: "Admin login",
   robots: { index: false, follow: false },
 };
 

@@ -263,6 +263,9 @@ export async function getBookingByReference(reference: string): Promise<StoredBo
   return data ? toStoredBooking(data) : null;
 }
 
+/** Keeps the admin bookings table from loading the entire table into one request as the business grows. */
+const ADMIN_LIST_LIMIT = 500;
+
 /** Every booking, soonest session first — the admin view. */
 export async function getAllBookings(): Promise<StoredBooking[]> {
   const db = getSupabase();
@@ -272,6 +275,7 @@ export async function getAllBookings(): Promise<StoredBooking[]> {
     .select()
     .order("session_date", { ascending: true })
     .order("start_time", { ascending: true })
+    .limit(ADMIN_LIST_LIMIT)
     .returns<BookingRow[]>();
 
   if (error) {

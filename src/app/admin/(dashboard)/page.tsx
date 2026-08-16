@@ -3,20 +3,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAllOrders } from "@/lib/orders-db";
+import { isAdminUser } from "@/lib/admin-auth";
 import { Icon } from "@/app/components/Icons";
 
 export const metadata: Metadata = {
-  title: "Orders — Traveloop admin",
+  title: "Admin · Orders",
   robots: { index: false, follow: false },
 };
 
 export default async function AdminOrdersPage() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!(await isAdminUser(supabase))) {
     redirect("/admin/login");
   }
 

@@ -9,8 +9,9 @@ import { toPassOrder } from "@/lib/fulfillment";
 import { getOrderBySessionId } from "@/lib/orders-db";
 
 export const metadata: Metadata = {
-  title: "Order confirmed — Traveloop",
+  title: "Order confirmed",
   robots: { index: false, follow: false },
+  alternates: { canonical: "/passes/success" },
 };
 
 type SuccessPageProps = {

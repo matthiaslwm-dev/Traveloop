@@ -23,7 +23,7 @@ export default function PartnersPage() {
   return (
     <>
       <Navbar forceScrolled />
-      <main>
+      <main id="main">
         <section className="arrival section-light page-hero">
           <div className="section-heading centered">
             <h2>Our Trusted Partners</h2>

@@ -2,9 +2,50 @@
 
 import { useEffect, useId, useRef, useState, type ChangeEvent } from "react";
 
+/**
+ * The bits of the YouTube IFrame API this file actually uses. Typing them
+ * narrowly beats `any`: the compiler catches a misspelt player method, and
+ * everything optional reflects that the API adds methods across versions.
+ */
+type YTPlayer = {
+  destroy?: () => void;
+  playVideo: () => void;
+  pauseVideo: () => void;
+  mute: () => void;
+  unMute: () => void;
+  seekTo: (seconds: number, allowSeekAhead: boolean) => void;
+  setVolume: (volume: number) => void;
+  getVolume: () => number;
+  getDuration: () => number;
+  getCurrentTime: () => number;
+  getIframe?: () => HTMLIFrameElement | undefined;
+  setPlaybackQuality: (level: string) => void;
+  getAvailableQualityLevels?: () => string[];
+};
+
+type YTEvent<T = number> = { target: YTPlayer; data: T };
+
+type YTNamespace = {
+  Player: new (
+    elementId: string,
+    options: {
+      width: string;
+      height: string;
+      videoId: string;
+      playerVars: Record<string, number>;
+      events: {
+        onReady: (e: YTEvent) => void;
+        onStateChange: (e: YTEvent) => void;
+        onPlaybackQualityChange: (e: YTEvent<string>) => void;
+      };
+    }
+  ) => YTPlayer;
+  PlayerState: { PLAYING: number };
+};
+
 declare global {
   interface Window {
-    YT: any;
+    YT: YTNamespace;
     onYouTubeIframeAPIReady?: () => void;
   }
 }
@@ -28,7 +69,7 @@ function loadYouTubeApi(): Promise<void> {
   });
 }
 
-function setHighestQuality(target: any) {
+function setHighestQuality(target: YTPlayer) {
   const levels: string[] = target.getAvailableQualityLevels?.() ?? [];
   target.setPlaybackQuality(levels[0] ?? "hd2160");
 }
@@ -78,7 +119,7 @@ export function useVideoPlayer() {
   const [muted, setMuted] = useState(true);
   const [quality, setQuality] = useState("auto");
   const [availableQualities, setAvailableQualities] = useState<string[]>([]);
-  const playerRef = useRef<any>(null);
+  const playerRef = useRef<YTPlayer | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userPickedQuality = useRef(false);
   const activeVideoId = useRef<string | null>(null);
@@ -110,7 +151,7 @@ export function useVideoPlayer() {
           playsinline: 1,
         },
         events: {
-          onReady: (e: any) => {
+          onReady: (e: YTEvent) => {
             const iframe = e.target.getIframe?.();
             if (iframe && title) iframe.title = title;
             setAvailableQualities(e.target.getAvailableQualityLevels?.() ?? []);
@@ -127,13 +168,13 @@ export function useVideoPlayer() {
               }
             }, 250);
           },
-          onStateChange: (e: any) => {
+          onStateChange: (e: YTEvent) => {
             setPaused(e.data !== window.YT.PlayerState.PLAYING);
             if (e.data === window.YT.PlayerState.PLAYING && !userPickedQuality.current) {
               setHighestQuality(e.target);
             }
           },
-          onPlaybackQualityChange: (e: any) => {
+          onPlaybackQualityChange: (e: YTEvent<string>) => {
             setQuality(e.data);
           },
         },

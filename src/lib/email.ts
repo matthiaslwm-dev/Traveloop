@@ -200,6 +200,73 @@ export async function sendAccountWelcomeEmail(
 }
 
 /* ------------------------------------------------------------------ */
+/* Contact form                                                        */
+/* ------------------------------------------------------------------ */
+
+/** Visitor-supplied text goes into an HTML email — escape it, don't trust it. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export type ContactEnquiry = {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+};
+
+/**
+ * Delivers a website enquiry to the team inbox, with the visitor's address as
+ * reply-to so a reply goes straight back to them. Logs instead of sending when
+ * Resend isn't configured. Returns false if the enquiry could not be delivered,
+ * so the form can tell the visitor rather than silently swallowing it.
+ */
+export async function sendContactEnquiryEmail(enquiry: ContactEnquiry): Promise<boolean> {
+  const to = process.env.CONTACT_NOTIFICATION_EMAIL ?? "hello@traveloop.my";
+  const resend = getResend();
+
+  if (!resend) {
+    console.info("[email] RESEND_API_KEY not set — logging contact enquiry instead of sending:", {
+      to,
+      ...enquiry,
+    });
+    return true;
+  }
+
+  const html = emailShell(
+    "New website enquiry",
+    `
+      <table style="width: 100%; border-collapse: collapse; margin: 0 0 20px; font-size: 14px;">
+        <tr><td style="padding: 8px 0; color: #6b6b6b; width: 30%;">Name</td><td style="padding: 8px 0; font-weight: 600;">${escapeHtml(enquiry.name)}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b6b6b;">Email</td><td style="padding: 8px 0; font-weight: 600;">${escapeHtml(enquiry.email)}</td></tr>
+        <tr><td style="padding: 8px 0; color: #6b6b6b;">Subject</td><td style="padding: 8px 0; font-weight: 600;">${escapeHtml(enquiry.subject)}</td></tr>
+      </table>
+      <p style="background:#f7f5f2; border-radius:12px; padding:16px 18px; font-size:13.5px; white-space:pre-wrap;">${escapeHtml(enquiry.message)}</p>
+    `
+  );
+
+  const { error } = await resend.emails.send({
+    from: process.env.EMAIL_FROM ?? "Traveloop <onboarding@resend.dev>",
+    to,
+    replyTo: enquiry.email,
+    subject: `[${enquiry.subject}] Website enquiry from ${enquiry.name}`,
+    html,
+  });
+
+  if (error) {
+    console.error("[email] Failed to send contact enquiry:", error);
+    return false;
+  }
+
+  return true;
+}
+
+/* ------------------------------------------------------------------ */
 /* Cultural-experience bookings                                        */
 /* ------------------------------------------------------------------ */
 

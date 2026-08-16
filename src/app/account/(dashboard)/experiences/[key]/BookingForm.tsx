@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import { createBooking, type BookingFormState } from "@/app/account/booking-actions";
 import { Icon } from "@/app/components/Icons";
 import {
@@ -104,7 +104,7 @@ export default function BookingForm({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [slot, setSlot] = useState<string | null>(null);
 
-  const [participants, setParticipants] = useState(experience.participants.min);
+  const [requestedParticipants, setRequestedParticipants] = useState(experience.participants.min);
   const [children, setChildren] = useState(0);
   const [packageKey, setPackageKey] = useState(
     experience.pricing.mode === "packages" ? experience.pricing.options[0].key : ""
@@ -122,8 +122,6 @@ export default function BookingForm({
     setMonth(monthOf(Object.keys(option.slotsByDate).sort()[0] ?? option.window.earliest));
   }
 
-  const quote = quoteBooking(experience, pass.discountPercent, { participants, packageKey });
-
   const firstMonth = monthOf(availableDates[0] ?? pass.window.earliest);
   const lastMonth = monthOf(availableDates.at(-1) ?? pass.window.latest);
   const grid = monthGrid(month);
@@ -136,10 +134,11 @@ export default function BookingForm({
 
   // A slot with fewer spots left than the headcount already dialled in must
   // pull that count back down — otherwise the stepper would let the customer
-  // submit more people than the session has room for.
-  useEffect(() => {
-    setParticipants((current) => Math.min(current, participantsMax));
-  }, [participantsMax]);
+  // submit more people than the session has room for. Clamping on read keeps
+  // the requested figure intact, so picking a roomier slot restores it.
+  const participants = Math.min(requestedParticipants, participantsMax);
+
+  const quote = quoteBooking(experience, pass.discountPercent, { participants, packageKey });
 
   const canSubmit = Boolean(slot) && acknowledged && !pending;
 
@@ -333,7 +332,7 @@ export default function BookingForm({
           value={participants}
           min={experience.participants.min}
           max={participantsMax}
-          onChange={setParticipants}
+          onChange={setRequestedParticipants}
         />
 
         {experience.freeChildAgeUnder && (

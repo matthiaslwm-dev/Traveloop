@@ -18,7 +18,7 @@ import { Icon } from "@/app/components/Icons";
 import { profileCompleteness } from "@/app/account/profile-summary";
 
 export const metadata: Metadata = {
-  title: "My account — Traveloop",
+  title: "My account",
   robots: { index: false, follow: false },
 };
 

@@ -4,8 +4,9 @@ import { getPassTier, passTiers } from "@/app/data/passes";
 import RegistrationForm from "./RegistrationForm";
 
 export const metadata: Metadata = {
-  title: "Complete your registration — Traveloop",
+  title: "Complete your registration",
   robots: { index: false, follow: false },
+  alternates: { canonical: "/passes/register" },
 };
 
 type RegisterPageProps = {

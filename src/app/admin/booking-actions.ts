@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getOrderBySessionId } from "@/lib/orders-db";
 import { isBookingStatus, updateBookingStatus } from "@/lib/experience-bookings-db";
 import { sendBookingStatusEmail } from "@/lib/email";
+import { isAdminUser } from "@/lib/admin-auth";
 
 /**
  * Moves a booking through its lifecycle from the admin table.
@@ -16,11 +17,7 @@ import { sendBookingStatusEmail } from "@/lib/email";
  */
 export async function setBookingStatus(formData: FormData) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+  if (!(await isAdminUser(supabase))) {
     redirect("/admin/login");
   }
 

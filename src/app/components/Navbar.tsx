@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { CNFlag, USFlag } from "./Flags";
 
@@ -25,11 +26,13 @@ export default function Navbar({ forceScrolled = false }: { forceScrolled?: bool
   const [lang, setLang] = useState<(typeof languages)[number]["code"]>("en");
   const [menuOpen, setMenuOpen] = useState(false);
   const [wechatOpen, setWechatOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // The WeChat QR portals into document.body, which doesn't exist during SSR.
+  // Reading it as an effect-free "am I on the client?" avoids a render pass.
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
     function onScroll() {
@@ -70,8 +73,11 @@ export default function Navbar({ forceScrolled = false }: { forceScrolled?: bool
 
   return (
     <header className="nav" ref={navRef}>
+      <a className="skip-link" href="#main">
+        Skip to content
+      </a>
       <Link className="brand" href="/" aria-label="Traveloop home">
-        <img src="/traveloop-logo.webp" alt="Traveloop" />
+        <Image src="/traveloop-logo.webp" alt="Traveloop" width={1280} height={345} priority />
       </Link>
       <nav className="nav-links" aria-label="Main navigation">
         <Link href="/">Home</Link>
@@ -147,10 +153,12 @@ export default function Navbar({ forceScrolled = false }: { forceScrolled?: bool
             >
               ×
             </button>
-            <img
+            <Image
               className="wechat-modal-qr"
               src="/wechat.jfif"
               alt="WeChat QR code"
+              width={792}
+              height={973}
             />
           </div>
         </div>,

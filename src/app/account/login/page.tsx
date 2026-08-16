@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@/app/components/Icons";
 import { login } from "./actions";
 
 export const metadata: Metadata = {
-  title: "Sign in — Traveloop account",
+  title: "Sign in to your account",
   robots: { index: false, follow: false },
 };
 
@@ -18,7 +19,14 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
   return (
     <main className="account-login">
       <form className="account-login-card" action={login}>
-        <img className="account-login-logo" src="/traveloop-logo.webp" alt="Traveloop" />
+        <Image
+          className="account-login-logo"
+          src="/traveloop-logo.webp"
+          alt="Traveloop"
+          width={1280}
+          height={345}
+          priority
+        />
         <h1>Sign in to your account</h1>
         <p className="account-login-sub">
           Use the email and password we sent you after your purchase.
@@ -53,7 +61,7 @@ export default async function AccountLoginPage({ searchParams }: LoginPageProps)
 
       <Link className="account-login-back" href="/">
         <Icon name="arrowRight" />
-        Back to traveloop.com
+        Back to traveloop.my
       </Link>
     </main>
   );

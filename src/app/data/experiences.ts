@@ -318,6 +318,31 @@ function applyDiscount(cents: number, discountPercent: number): number {
   return Math.round(cents * (1 - discountPercent / 100));
 }
 
+/** 25 -> "25", 83.75 -> "83.75" — no trailing zeros on whole percentages. */
+export function formatDiscountPercent(discountPercent: number): string {
+  return String(discountPercent);
+}
+
+/**
+ * What one participant pays at a given tier, or null when no single per-person
+ * figure exists — the tier isn't entitled, or the experience is package-priced.
+ *
+ * This is what the marketing copy on the passes page is built from, so the
+ * prices a shopper compares are the same ones `quoteBooking` will charge them.
+ */
+export function tierPerPersonCents(experience: Experience, tier: PassKey): number | null {
+  const entitlement = getEntitlement(tier, experience);
+  if (!entitlement.entitled || experience.pricing.mode !== "per-person") return null;
+  return applyDiscount(experience.pricing.basePerPersonCents, entitlement.discountPercent);
+}
+
+/** The undiscounted per-person price, or null for package-priced experiences. */
+export function regularPerPersonCents(experience: Experience): number | null {
+  return experience.pricing.mode === "per-person"
+    ? experience.pricing.basePerPersonCents
+    : null;
+}
+
 export type QuoteInput = {
   participants: number;
   /** Only meaningful for `mode: "packages"` experiences. */

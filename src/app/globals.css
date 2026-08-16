@@ -867,6 +867,9 @@ a.contact-card:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(8
 .compare-table tbody tr:hover td { background:rgba(36,71,152,.03); }
 .compare-cell-yes { color:var(--blue); font-weight:700; }
 .compare-cell-no { color:var(--muted); opacity:.5; }
+.compare-price-original { display:block; font-size:12px; font-weight:600; color:var(--muted); text-decoration:line-through; text-decoration-color:var(--red); opacity:.75; }
+.compare-price-current { display:block; margin-top:3px; font-family:var(--font-sora),sans-serif; font-size:17px; letter-spacing:-.02em; color:var(--red); }
+.compare-price-discount { display:inline-block; margin-top:7px; padding:4px 10px; border-radius:999px; background:rgba(215,41,54,.1); color:var(--red); font-size:10px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; }
 .compare-cta-row td { padding-top:22px; padding-bottom:24px; }
 .compare-cta { display:inline-flex; align-items:center; justify-content:center; padding:11px 20px; border-radius:999px; background:var(--ink); color:#fff; font-size:12.5px; font-weight:700; transition:background .25s ease, transform .25s ease; }
 .compare-cta:hover { background:var(--red); transform:translateY(-2px); }

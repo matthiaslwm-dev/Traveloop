@@ -7,9 +7,7 @@ import Footer from "../components/Footer";
 import { Icon } from "../components/Icons";
 import PassCard, { PassStack } from "../components/PassCard";
 import CheckoutCancelledNotice from "../components/CheckoutCancelledNotice";
-import { passTiers, passComparison, type PassKey } from "../data/passes";
-
-const tierKeys: PassKey[] = ["silver", "gold", "platinum"];
+import { passTiers, passComparison, tierKeys, isComparisonPrice } from "../data/passes";
 
 const safetyFeatures = [
   {
@@ -58,7 +56,7 @@ const passFaqs = [
   {
     question: "How far ahead do I need to book the Platinum photography session?",
     answer:
-      "At least 3 days in advance, subject to photographer and time-slot availability. Sessions run daily at 8:00 AM, 10:00 AM, 2:00 PM, and 4:00 PM around Penang's Heritage Zone and Batu Ferringhi hotels.",
+      "At least 3 days in advance, subject to photographer and time-slot availability. Sessions run Saturday mornings, 8:30–10:00 AM and 10:00–11:30 AM, around Penang's Heritage Zone and Batu Ferringhi hotels.",
   },
 ];
 
@@ -191,6 +189,17 @@ export default function PassesPage() {
                       <td>{row.label}</td>
                       {tierKeys.map((key) => {
                         const value = row.values[key];
+
+                        if (isComparisonPrice(value)) {
+                          return (
+                            <td key={key} className="compare-cell-yes">
+                              <s className="compare-price-original">{value.regular}</s>
+                              <strong className="compare-price-current">{value.price}</strong>
+                              <span className="compare-price-discount">{value.discount}</span>
+                            </td>
+                          );
+                        }
+
                         return (
                           <td
                             key={key}

@@ -911,6 +911,7 @@ a.contact-card:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(8
   .benefit-grid { grid-template-columns:1fr; }
   .tier-preview { grid-template-columns:1fr; }
   .why-cards { grid-template-columns:1fr; }
+  .why-card:nth-child(3) .why-card-bg img { object-position:78% 45%; }
   .reviews-grid { grid-template-columns:1fr; }
   .contact-grid { grid-template-columns:1fr; }
   .form-row { grid-template-columns:1fr; }
@@ -972,6 +973,7 @@ a.contact-card:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(8
   .hero-copy { width:100%;font-size:16px; }
   .hero-bg-img { object-position:76% 20%; }
   .indian .experience-bg { background-position:80% center; }
+  .lion .experience-bg { background-position:38% 80%; }
   .scroll-cue { left:28px; }
   .arrival,.bridge,.perks,.how-it-works,.pass,.trust { padding-left:20px;padding-right:20px; }
   .discover-grid { grid-template-columns:1fr; grid-template-rows:repeat(3,220px); }

@@ -64,7 +64,7 @@ export default function InsuranceTerms() {
       <h4>4. Eligibility</h4>
       <p>Insurance coverage is available only to participants:</p>
       <ul>
-        <li>aged between 30 years and 75 years;</li>
+        <li>aged between 30 days and 75 years;</li>
         <li>whose names and identification details have been declared by Traveloop;</li>
         <li>participating in officially organised Traveloop activities; and</li>
         <li>within the declared coverage period.</li>
@@ -87,17 +87,15 @@ export default function InsuranceTerms() {
         <li>Hijacking</li>
         <li>Unprovoked murder or assault</li>
         <li>Amateur scuba diving (maximum 50 metres depth)</li>
-        <li>Amateur mountaineering</li>
+        <li>Amateur mountaineering (exclude use of rope or climbing equipment)</li>
         <li>Amateur hunting</li>
-        <li>Underwater activities</li>
+        <li>Underwater activities (maximum 50 metres depth)</li>
         <li>Electrocution</li>
         <li>Drowning</li>
         <li>Food poisoning</li>
         <li>Accidental gas inhalation</li>
         <li>Suffocation by smoke, fumes or poisonous gas</li>
-        <li>Harmful insect bites</li>
-        <li>Snake bites</li>
-        <li>Animal bites (excluding diseases transmitted)</li>
+        <li>Harmful insect bites / Snake bites / Animal bites (excluding diseases transmitted)</li>
         <li>
           Natural catastrophes including flood, windstorm, typhoon, hurricane and volcanic eruption
         </li>
@@ -133,32 +131,85 @@ export default function InsuranceTerms() {
         <li>Email: insurance@traveloop.my</li>
         <li>WhatsApp: +6011-3949 2888</li>
         <li>WeChat: Traveloop_MY</li>
-        <li>Mobile number: +6011-3949 2888 / +6017-653 9766</li>
+        <li>Mobile number: +6011-3949 2888</li>
       </ul>
       <p>
         Insurance claims must be submitted together with the completed Claim Form and supporting
         documents.
       </p>
+
       <p>
         <strong>Claims up to RM500</strong> — the following documents are required:
       </p>
       <ul>
-        <li>Completed Claim Form.</li>
         <li>Doctor&apos;s Diagnosis.</li>
-        <li>Original Medical Receipt with Official Stamp and Signature.</li>
-        <li>Copy of Passport or Malaysian Identity Card (IC).</li>
+        <li>Original Medical bill/Medical Receipt with Official Stamp and Signature.</li>
+        <li>Copy of Passport or Malaysian Identity Card (NRIC).</li>
+        <li>Complete e-payment form.</li>
       </ul>
+      <p>Information needed for TT payment to overseas:</p>
+      <ul>
+        <li>Beneficiary name</li>
+        <li>Beneficiary passport no</li>
+        <li>Beneficiary address (overseas)</li>
+        <li>Beneficiary account no</li>
+        <li>Beneficiary Bank&apos;s name</li>
+        <li>Beneficiary bank address</li>
+        <li>Swift code (e.g. BOTKJPJT)</li>
+        <li>Currency to be paid (e.g. SGD, USD etc)</li>
+      </ul>
+
       <p>
-        <strong>Claims above RM500</strong> — the following additional documents are required:
+        <strong>Permanent Disablement</strong> — the following documents are required:
       </p>
       <ul>
-        <li>Medical Report completed by the attending doctor.</li>
-        <li>Copy of Passport or Malaysian Identity Card (IC).</li>
-        <li>
-          Original Itemised Medical Receipt with the clinic&apos;s or hospital&apos;s official stamp
-          and authorised signature.
-        </li>
+        <li>Copy of Passport or Malaysian Identity Card (NRIC).</li>
+        <li>Specialist Report confirming the permanent disablement.</li>
+        <li>Photographs depicting the amputation of the affected limb(s), where applicable.</li>
+        <li>X-ray and/or MRI reports, if any.</li>
+        <li>Complete e-payment form.</li>
       </ul>
+      <p>Information needed for TT payment to overseas:</p>
+      <ul>
+        <li>Beneficiary name</li>
+        <li>Beneficiary passport no</li>
+        <li>Beneficiary address (overseas)</li>
+        <li>Beneficiary account no</li>
+        <li>Beneficiary Bank&apos;s name</li>
+        <li>Beneficiary bank address</li>
+        <li>Swift code (e.g. BOTKJPJT)</li>
+        <li>Currency to be paid (e.g. SGD, USD etc)</li>
+      </ul>
+
+      <p>
+        <strong>Accidental Death</strong> — the following documents are required:
+      </p>
+      <ul>
+        <li>Detailed Post-Mortem Report.</li>
+        <li>Toxicology Report, where applicable.</li>
+        <li>Death Certificate.</li>
+        <li>Police Report.</li>
+        <li>Newspaper cutting of the incident, where applicable.</li>
+        <li>Burial or Cremation Permit.</li>
+        <li>Copy of Deceased&apos;s Passport or Malaysian Identity Card (NRIC).</li>
+        <li>Copy of Marriage/Birth Certificate, where applicable.</li>
+        <li>
+          Letter of Administration/Distribution Order/Sijil Faraid — when there is no Nomination.
+        </li>
+        <li>Complete e-payment form.</li>
+      </ul>
+      <p>Information needed for TT payment to overseas:</p>
+      <ul>
+        <li>Beneficiary name</li>
+        <li>Beneficiary passport no</li>
+        <li>Beneficiary address (overseas)</li>
+        <li>Beneficiary account no</li>
+        <li>Beneficiary Bank&apos;s name</li>
+        <li>Beneficiary bank address</li>
+        <li>Swift code (e.g. BOTKJPJT)</li>
+        <li>Currency to be paid (e.g. SGD, USD etc)</li>
+      </ul>
+
       <p>Traveloop may request additional documents if required by the insurer.</p>
 
       <h4>9. Claim Notification</h4>
@@ -167,7 +218,7 @@ export default function InsuranceTerms() {
         <li>Email: insurance@traveloop.my</li>
         <li>WhatsApp: +6011-3949 2888</li>
         <li>WeChat: Traveloop_MY</li>
-        <li>Mobile number: +6011-3949 2888 / +6017-653 9766</li>
+        <li>Mobile number: +6011-3949 2888</li>
       </ul>
       <p>
         Where applicable under the insurance policy, notification should be made within 5 days from
@@ -256,38 +307,14 @@ export default function InsuranceTerms() {
         exchange rate, currency conversion, processing or payment of any insurance claim.
       </p>
 
-      <h4>18. Refund &amp; Cancellation Policy</h4>
+      <h4>Participant Declaration</h4>
       <p>
-        All purchases of Traveloop products and services are final. Once payment has been
-        successfully completed, the purchase cannot be cancelled, amended, transferred, or refunded
-        under any circumstances.
-      </p>
-      <p>
-        Customers are advised to carefully review all product details, pricing, inclusions,
-        exclusions, and these Terms &amp; Conditions before completing their purchase.
-      </p>
-      <p>No refund, whether in full or in part, shall be provided for:</p>
-      <ul>
-        <li>Change of mind;</li>
-        <li>Failure to attend or utilise the purchased product or service;</li>
-        <li>Late arrival or missed participation;</li>
-        <li>Failure to redeem any benefits within the applicable validity period; or</li>
-        <li>
-          Any personal circumstances preventing the customer from using the purchased product or
-          service.
-        </li>
-      </ul>
-      <p>
-        Traveloop Malaysia reserves the right to cancel, modify, suspend, or discontinue any
-        product, service, or experience due to circumstances beyond its reasonable control,
-        including but not limited to force majeure, government directives, safety concerns, or
-        operational requirements. In such cases, Traveloop may, at its sole discretion, offer an
-        alternative arrangement or other appropriate remedy where applicable.
-      </p>
-      <p>
-        By completing the purchase, the customer acknowledges that they have read, understood, and
-        agreed to this Refund &amp; Cancellation Policy and accept that all purchases are
-        non-refundable and non-cancellable.
+        ☐ I hereby confirm that I have read, understood and agreed to the Traveloop Terms &amp;
+        Conditions and Insurance Terms &amp; Conditions. I acknowledge that participation is
+        voluntary and at my own risk. I understand that insurance coverage is subject to the
+        insurer&apos;s policy terms, conditions, exclusions and final approval, and that Traveloop
+        (Seni Mega Venture Sdn. Bhd.) shall not be liable for any claim rejected or reduced by the
+        insurer.
       </p>
     </div>
   );

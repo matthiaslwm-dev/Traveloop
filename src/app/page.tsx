@@ -9,7 +9,7 @@ import { Icon, StarbucksLogo } from "./components/Icons";
 import { partners } from "./data/partners";
 import { passTiers as tierShowcase } from "./data/passes";
 import { PassStack } from "./components/PassCard";
-import { useVideoPlayer, VideoStage, VideoControls, VideoCloseButton } from "./components/VideoPlayer";
+import { useVideoPlayer, VideoStage, VideoControls, VideoCloseButton, type VideoPlayer } from "./components/VideoPlayer";
 
 const reviews = [
   {
@@ -130,8 +130,34 @@ export default function Home() {
   };
 
   function playFilm(videoId: string, title: string) {
-    filmModalRef.current?.showModal();
+    const modal = filmModalRef.current;
+    modal?.showModal();
     film.start(videoId, title);
+    // On mobile, drop into real browser fullscreen (hides the address bar
+    // like a native player) and try to lock landscape. Both are best-effort:
+    // iOS Safari has no orientation.lock, so it silently no-ops there and the
+    // viewer just rotates their phone.
+    if (modal && window.matchMedia("(max-width: 640px)").matches) {
+      modal
+        .requestFullscreen?.()
+        .then(() => {
+          const orientation = screen.orientation as ScreenOrientation & {
+            lock?: (o: string) => Promise<void>;
+          };
+          orientation?.lock?.("landscape").catch(() => {});
+        })
+        .catch(() => {});
+    }
+  }
+
+  // On mobile the ambient in-section player is cramped, so tapping Play Video
+  // opens the same fullscreen dialog used for "Watch the story" instead.
+  function playAmbientOrFullscreen(player: VideoPlayer, videoId: string, title: string) {
+    if (window.matchMedia("(max-width: 640px)").matches) {
+      playFilm(videoId, title);
+    } else {
+      player.start(videoId, title);
+    }
   }
 
   useEffect(() => {
@@ -188,9 +214,18 @@ export default function Home() {
     };
     const onFilmClose = () => {
       film.stop();
+      if (document.fullscreenElement === filmModal) document.exitFullscreen().catch(() => {});
+      const orientation = screen.orientation as ScreenOrientation & { unlock?: () => void };
+      orientation?.unlock?.();
+    };
+    // A swipe-down / system back gesture exits fullscreen without firing the
+    // dialog's own close event, so the modal would otherwise stay open behind it.
+    const onFullscreenChange = () => {
+      if (!document.fullscreenElement && filmModal?.open) filmModal.close();
     };
     filmModal?.addEventListener("click", onFilmBackdropClick);
     filmModal?.addEventListener("close", onFilmClose);
+    document.addEventListener("fullscreenchange", onFullscreenChange);
 
     return () => {
       window.removeEventListener("load", onLoad);
@@ -198,6 +233,7 @@ export default function Home() {
       observer.disconnect();
       filmModal?.removeEventListener("click", onFilmBackdropClick);
       filmModal?.removeEventListener("close", onFilmClose);
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
     };
     // film.stop only closes over stable refs/setters from useVideoPlayer, so it's
     // safe to omit `film` here — including it would re-run this mount-only effect.
@@ -365,7 +401,7 @@ export default function Home() {
             <button
               type="button"
               className="play-video-btn"
-              onClick={() => lion.start("qLRp1pvOLr4", "Chinese Lion Dance Experience")}
+              onClick={() => playAmbientOrFullscreen(lion, "qLRp1pvOLr4", "Chinese Lion Dance Experience")}
               aria-label="Play lion dance video"
             >
               <span className="play-video-icon">▶</span>
@@ -401,7 +437,7 @@ export default function Home() {
             <button
               type="button"
               className="play-video-btn"
-              onClick={() => batik.start("qLRp1pvOLr4", "Batik Painting Experience")}
+              onClick={() => playAmbientOrFullscreen(batik, "qLRp1pvOLr4", "Batik Painting Experience")}
               aria-label="Play batik painting video"
             >
               <span className="play-video-icon">▶</span>
@@ -437,7 +473,7 @@ export default function Home() {
             <button
               type="button"
               className="play-video-btn"
-              onClick={() => indian.start("qLRp1pvOLr4", "Indian Heritage & Kolam Experience")}
+              onClick={() => playAmbientOrFullscreen(indian, "qLRp1pvOLr4", "Indian Heritage & Kolam Experience")}
               aria-label="Play Indian heritage video"
             >
               <span className="play-video-icon">▶</span>
@@ -471,7 +507,7 @@ export default function Home() {
             <button
               type="button"
               className="play-video-btn on-light"
-              onClick={() => taste.start(tasteVideoId, "The Taste of Malaysia")}
+              onClick={() => playAmbientOrFullscreen(taste, tasteVideoId, "The Taste of Malaysia")}
               aria-label="Play a taste of Malaysia video"
             >
               <span className="play-video-icon">▶</span>

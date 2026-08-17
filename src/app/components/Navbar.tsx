@@ -155,7 +155,7 @@ export default function Navbar({ forceScrolled = false }: { forceScrolled?: bool
             </button>
             <Image
               className="wechat-modal-qr"
-              src="/wechat.jfif"
+              src="/wechat.jpg"
               alt="WeChat QR code"
               width={792}
               height={973}

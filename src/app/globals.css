@@ -1246,10 +1246,10 @@ a.contact-card:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(8
 }
 
 /* ---- Registration (pre-checkout) ---- */
-.register-page { min-height:100vh; background:var(--warm-white); padding:48px clamp(18px,4vw,48px) 80px; }
+.register-page { min-height:100vh; background:var(--warm-white); padding:clamp(120px,14vw,152px) clamp(18px,4vw,48px) 80px; }
 .register-layout { max-width:1040px; margin:0 auto; display:grid; grid-template-columns:minmax(0,320px) minmax(0,1fr); gap:32px; align-items:start; }
 
-.register-summary { background:var(--deep-blue); color:white; border-radius:20px; padding:30px 28px; position:sticky; top:32px; }
+.register-summary { background:var(--deep-blue); color:white; border-radius:20px; padding:30px 28px; position:sticky; top:104px; }
 .register-summary .eyebrow { color:rgba(255,255,255,.72); margin-bottom:12px; }
 .register-summary h1 { margin:0 0 14px; font-family:var(--font-sora),sans-serif; font-size:26px; letter-spacing:-.02em; }
 .register-summary-price { margin:0 0 20px; display:flex; align-items:baseline; gap:10px; }

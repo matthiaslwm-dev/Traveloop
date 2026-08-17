@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
     // The Photography experience card image is hosted on Unsplash — every
     // other image lives in /public and needs no entry here.
     remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
+    // Next 15 changed the default to "attachment", which some mobile
+    // browsers refuse to render inline inside <img> (e.g. the WeChat QR
+    // modal). No SVGs go through this loader, so "inline" is safe.
+    contentDispositionType: "inline",
   },
 };
 

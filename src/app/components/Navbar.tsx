@@ -182,37 +182,40 @@ export default function Navbar({ forceScrolled = false }: { forceScrolled?: bool
         <span />
         <span />
       </button>
-      <div
-        id="mobile-menu"
-        className={`nav-mobile-overlay${menuOpen ? " open" : ""}`}
-        onClick={() => setMenuOpen(false)}
-      >
-        <nav
-          className="nav-mobile-menu"
-          aria-label="Mobile navigation"
-          onClick={(e) => e.stopPropagation()}
+      {mounted && createPortal(
+        <div
+          id="mobile-menu"
+          className={`nav-mobile-overlay${menuOpen ? " open" : ""}`}
+          onClick={() => setMenuOpen(false)}
         >
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>
-              {item.label}
+          <nav
+            className="nav-mobile-menu"
+            aria-label="Mobile navigation"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {navItems.map((item) => (
+              <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>
+                {item.label}
+              </Link>
+            ))}
+            <Link
+              className="nav-mobile-cta"
+              href="/passes"
+              onClick={() => setMenuOpen(false)}
+            >
+              Purchase Pass
             </Link>
-          ))}
-          <Link
-            className="nav-mobile-cta"
-            href="/passes"
-            onClick={() => setMenuOpen(false)}
-          >
-            Purchase Pass
-          </Link>
-          <Link
-            className="nav-mobile-cta nav-mobile-cta-secondary"
-            href="/account"
-            onClick={() => setMenuOpen(false)}
-          >
-            Customer Portal
-          </Link>
-        </nav>
-      </div>
+            <Link
+              className="nav-mobile-cta nav-mobile-cta-secondary"
+              href="/account"
+              onClick={() => setMenuOpen(false)}
+            >
+              Customer Portal
+            </Link>
+          </nav>
+        </div>,
+        document.body
+      )}
     </header>
   );
 }

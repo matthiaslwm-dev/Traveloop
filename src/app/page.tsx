@@ -9,7 +9,7 @@ import { Icon, StarbucksLogo } from "./components/Icons";
 import { partners } from "./data/partners";
 import { passTiers as tierShowcase } from "./data/passes";
 import { PassStack } from "./components/PassCard";
-import { useVideoPlayer, VideoStage, VideoControls } from "./components/VideoPlayer";
+import { useVideoPlayer, VideoStage, VideoControls, VideoCloseButton } from "./components/VideoPlayer";
 
 const reviews = [
   {
@@ -373,6 +373,7 @@ export default function Home() {
             </button>
           </div>
           {lion.playing && <VideoControls player={lion} />}
+          {lion.playing && <VideoCloseButton player={lion} />}
         </section>
 
         <section className="experience-panel batik section-dark" data-nav="dark">
@@ -408,6 +409,7 @@ export default function Home() {
             </button>
           </div>
           {batik.playing && <VideoControls player={batik} />}
+          {batik.playing && <VideoCloseButton player={batik} />}
           <div className="batik-orbit" aria-hidden="true"></div>
         </section>
 
@@ -443,6 +445,7 @@ export default function Home() {
             </button>
           </div>
           {indian.playing && <VideoControls player={indian} />}
+          {indian.playing && <VideoCloseButton player={indian} />}
         </section>
 
         <section className={`taste section-light${taste.playing ? " is-playing" : ""}`} id="taste" data-nav="light">
@@ -476,6 +479,7 @@ export default function Home() {
             </button>
           </div>
           {taste.playing && <VideoControls player={taste} />}
+          {taste.playing && <VideoCloseButton player={taste} />}
         </section>
 
         <section className="why section-light" id="why" data-nav="light">

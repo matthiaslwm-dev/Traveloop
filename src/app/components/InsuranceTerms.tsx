@@ -137,6 +137,7 @@ export default function InsuranceTerms() {
         Insurance claims must be submitted together with the completed Claim Form and supporting
         documents.
       </p>
+
       <p>
         <strong>Claims up to RM500</strong> — the following documents are required:
       </p>
@@ -157,6 +158,7 @@ export default function InsuranceTerms() {
         <li>Swift code (e.g. BOTKJPJT)</li>
         <li>Currency to be paid (e.g. SGD, USD etc)</li>
       </ul>
+
       <p>
         <strong>Permanent Disablement</strong> — the following documents are required:
       </p>
@@ -178,6 +180,7 @@ export default function InsuranceTerms() {
         <li>Swift code (e.g. BOTKJPJT)</li>
         <li>Currency to be paid (e.g. SGD, USD etc)</li>
       </ul>
+
       <p>
         <strong>Accidental Death</strong> — the following documents are required:
       </p>
@@ -206,6 +209,7 @@ export default function InsuranceTerms() {
         <li>Swift code (e.g. BOTKJPJT)</li>
         <li>Currency to be paid (e.g. SGD, USD etc)</li>
       </ul>
+
       <p>Traveloop may request additional documents if required by the insurer.</p>
 
       <h4>9. Claim Notification</h4>
@@ -301,6 +305,16 @@ export default function InsuranceTerms() {
       <p>
         Traveloop shall not be responsible for the assessment, approval, rejection, currency
         exchange rate, currency conversion, processing or payment of any insurance claim.
+      </p>
+
+      <h4>Participant Declaration</h4>
+      <p>
+        ☐ I hereby confirm that I have read, understood and agreed to the Traveloop Terms &amp;
+        Conditions and Insurance Terms &amp; Conditions. I acknowledge that participation is
+        voluntary and at my own risk. I understand that insurance coverage is subject to the
+        insurer&apos;s policy terms, conditions, exclusions and final approval, and that Traveloop
+        (Seni Mega Venture Sdn. Bhd.) shall not be liable for any claim rejected or reduced by the
+        insurer.
       </p>
     </div>
   );

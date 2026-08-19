@@ -280,8 +280,26 @@ export function VideoStage({ player }: { player: VideoPlayer }) {
   return (
     <>
       <div id={player.elementId} />
-      <div className={`video-shield${player.paused ? "" : " is-hidden"}`} aria-hidden="true" />
+      <div className={`video-shield${player.paused ? "" : " is-hidden"}`} aria-hidden="true">
+        <span className="video-spinner" />
+      </div>
     </>
+  );
+}
+
+/** Standalone close (×) button for videos that play ambiently in a page
+ * section rather than a dialog — those have no other obvious way to back
+ * out of the video short of the small stop icon in the control bar. */
+export function VideoCloseButton({ player }: { player: VideoPlayer }) {
+  return (
+    <button
+      type="button"
+      className="video-close-btn"
+      onClick={player.stop}
+      aria-label="Close video"
+    >
+      <span aria-hidden="true">×</span>
+    </button>
   );
 }
 
@@ -309,7 +327,7 @@ export function VideoControls({ player }: { player: VideoPlayer }) {
       </button>
       <button
         type="button"
-        className="video-control-btn"
+        className="video-control-btn video-stop-btn"
         onClick={player.stop}
         aria-label="Stop video"
       >

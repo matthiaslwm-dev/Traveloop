@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Navbar from "../../components/Navbar";
-import Footer from "../../components/Footer";
+import Navbar from "@/app/components/Navbar";
+import Footer from "@/app/components/Footer";
 import { getPassTier, passTiers } from "@/app/data/passes";
 import RegistrationForm from "./RegistrationForm";
 

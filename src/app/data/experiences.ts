@@ -171,7 +171,7 @@ export const experiences: Experience[] = [
     key: "indian-culture",
     name: "Indian Culture Experience",
     icon: "users",
-    image: "/kolam.png",
+    image: "/food-malaysia.png",
     tagline: "Kolam art, a cooking lesson and Bharatanatyam.",
     description:
       "An afternoon at Penang's Mariamman Temple: try your hand at kolam rice-flour art, take a traditional Indian cooking lesson, and watch a Bharatanatyam dance demonstration.",

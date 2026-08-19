@@ -33,7 +33,7 @@ const reviews = [
     mask: "**********",
     date: "2026-05-27 17:03:41",
     body: "Learning to draw kolam with rice flour was so calming, and the food tasting after was incredible. Our host made sure everyone in the group felt included.",
-    img: "/kolam.png",
+    img: "/food-malaysia.png",
     activity: "Indian Heritage & Kolam Experience in Kuala Lumpur",
   },
 ];

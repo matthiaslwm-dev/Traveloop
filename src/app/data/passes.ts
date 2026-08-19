@@ -314,7 +314,7 @@ const passPerkCategorySeeds: PassPerkCategorySeed[] = [
   },
   {
     icon: "users",
-    img: "/kolam.png",
+    img: "/food-malaysia.png",
     title: "Indian Culture Experience",
     description:
       "Try your hand at kolam (rice-flour rangoli) art, a traditional Indian cooking lesson, and a Bharatanatyam dance demonstration. Runs Sunday 3:00–5:00 PM. Children aged 5 and under join free.",

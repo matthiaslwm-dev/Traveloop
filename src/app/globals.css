@@ -235,7 +235,7 @@ h1,h2,h3 { margin-top: 0; }
 .experience-panel:hover .experience-bg { transform:scale(1.025); }
 .lion .experience-bg { background-image:url('/lion-dance.webp'); background-size:cover; inset:0; }
 .batik .experience-bg { background-image:url('/batik.jpg'); }
-.indian .experience-bg { background-image:url('/kolam.webp'); background-size:cover; inset:0; }
+.indian .experience-bg { background-image:url('/food-penang-bridge.png'); background-size:cover; inset:0; }
 .experience-video { position:absolute;inset:0;overflow:hidden;z-index:1;pointer-events:none; }
 .experience-video iframe { position:absolute;top:50%;left:50%;width:177.78vh;height:100vh;min-width:100%;min-height:56.25vw;transform:translate(-50%,-50%);pointer-events:none; }
 .video-shield { position:absolute; inset:0; z-index:2; background:#05070d; opacity:1; transition:opacity .4s ease; pointer-events:none; }
@@ -279,7 +279,7 @@ h1,h2,h3 { margin-top: 0; }
 .batik-orbit { position:absolute;right:9%;top:16%;width:220px;height:220px;border:1px solid rgba(255,255,255,.28);border-radius:50%;z-index:2; }
 .batik-orbit:before,.batik-orbit:after{content:"";position:absolute;border:1px solid rgba(255,255,255,.18);border-radius:50%;inset:28px}.batik-orbit:after{inset:60px}
 
-.taste { position:relative; overflow:hidden; min-height:100svh; display:flex; align-items:center; justify-content:center; padding: clamp(110px, 12vw, 190px) clamp(24px, 7vw, 110px); background-image:url('/food.webp'); background-size:cover; background-position:center; background-repeat:no-repeat; transition:background-color .4s ease; }
+.taste { position:relative; overflow:hidden; min-height:100svh; display:flex; align-items:center; justify-content:center; padding: clamp(110px, 12vw, 190px) clamp(24px, 7vw, 110px); background-image:url('/food-malaysia.png'); background-size:cover; background-position:center; background-repeat:no-repeat; transition:background-color .4s ease; }
 .taste:after { content:""; position:absolute; left:0; right:0; bottom:0; height:clamp(100px,14vw,220px); background:linear-gradient(to bottom, transparent, var(--warm-white)); pointer-events:none; z-index:2; }
 .taste.is-playing:after { opacity:0; transition:opacity .4s ease; }
 .taste-bg-video { position:absolute; inset:0; z-index:1; overflow:hidden; pointer-events:none; background:#050b16; }
@@ -1233,7 +1233,8 @@ a.contact-card:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(8
 }
 
 /* ---- Registration (pre-checkout) ---- */
-.register-page { min-height:100vh; background:var(--warm-white); padding:48px clamp(18px,4vw,48px) 80px; }
+/* No hero here, so clear the fixed navbar manually */
+.register-page { min-height:100vh; background:var(--warm-white); padding:calc(70px + 48px) clamp(18px,4vw,48px) 80px; }
 .register-layout { max-width:1040px; margin:0 auto; display:grid; grid-template-columns:minmax(0,320px) minmax(0,1fr); gap:32px; align-items:start; }
 
 .register-summary { background:var(--deep-blue); color:white; border-radius:20px; padding:30px 28px; position:sticky; top:32px; }

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Navbar from "../../components/Navbar";
+import Footer from "../../components/Footer";
 import { getPassTier, passTiers } from "@/app/data/passes";
 import RegistrationForm from "./RegistrationForm";
 
@@ -20,22 +22,26 @@ export default async function RegisterPage({ searchParams }: RegisterPageProps) 
   const seedTier = getPassTier(typeof pass === "string" ? pass : undefined);
 
   return (
-    <main className="register-page">
-      <div className="register-layout">
-        <aside className="register-summary">
-          <p className="eyebrow">Your order</p>
-          <h1>Build your order</h1>
-          <p className="register-summary-lede">
-            Add a pass for each traveller — everyone in your group needs their own tourist registration
-            and insurance details.
-          </p>
-          <Link className="register-summary-back" href="/passes">
-            ← Choose a different pass
-          </Link>
-        </aside>
+    <>
+      <Navbar forceScrolled />
+      <main className="register-page">
+        <div className="register-layout">
+          <aside className="register-summary">
+            <p className="eyebrow">Your order</p>
+            <h1>Build your order</h1>
+            <p className="register-summary-lede">
+              Add a pass for each traveller — everyone in your group needs their own tourist
+              registration and insurance details.
+            </p>
+            <Link className="register-summary-back" href="/passes">
+              ← Choose a different pass
+            </Link>
+          </aside>
 
-        <RegistrationForm passTiers={passTiers} seedPassKey={seedTier?.key} />
-      </div>
-    </main>
+          <RegistrationForm passTiers={passTiers} seedPassKey={seedTier?.key} />
+        </div>
+      </main>
+      <Footer />
+    </>
   );
 }

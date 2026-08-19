@@ -180,10 +180,9 @@ function ConfirmedState({ state }: { state: Extract<OrderState, { kind: "paid" |
         {isPaid && (
           <Link
             className="button ghost dark"
-            href={`/api/orders/${order.sessionId}/invoice`}
-            target="_blank"
+            href={`/api/orders/${order.sessionId}/invoice?format=pdf`}
           >
-            View invoice
+            Download invoice
           </Link>
         )}
         <Link className="button ghost dark" href="/contact">

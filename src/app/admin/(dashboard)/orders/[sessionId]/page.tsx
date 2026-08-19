@@ -41,11 +41,9 @@ export default async function AdminOrderDetailPage({ params }: OrderDetailPagePr
         actions={
           <a
             className="ad-btn"
-            href={`/api/orders/${order.sessionId}/invoice`}
-            target="_blank"
-            rel="noreferrer"
+            href={`/api/orders/${order.sessionId}/invoice?format=pdf`}
           >
-            View invoice
+            Download invoice
           </a>
         }
       />

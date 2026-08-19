@@ -70,10 +70,9 @@ export default async function AdminOrdersPage() {
             label: "View registrations",
           },
           {
-            href: `/api/orders/${order.sessionId}/invoice`,
+            href: `/api/orders/${order.sessionId}/invoice?format=pdf`,
             icon: "receipt",
-            label: "View invoice",
-            external: true,
+            label: "Download invoice",
           },
         ],
       },

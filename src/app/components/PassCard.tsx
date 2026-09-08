@@ -1,19 +1,25 @@
 import Image from "next/image";
 import type { PassKey } from "../data/passes";
 
-/** The Traveloop pass artwork. Sizing comes from the wrapper (.pass-stack, .pricing-visual). */
+/**
+ * The Malaysia Experience Card. The artwork is the printed card front —
+ * identical on every tier, exactly as it comes off the press — so the tier is
+ * carried by the frame and the wash over it, the way the physical cards do it.
+ * Sizing comes from the wrapper (.pass-stack, .pricing-visual).
+ */
 export default function PassCard({ tierKey, name }: { tierKey: PassKey; name: string }) {
   return (
     <div className={`pass-card tier-${tierKey}`}>
-      <div className="card-shine" />
-      <div className="card-top">
-        <Image src="/traveloop-logo.webp" alt="" width={1280} height={345} />
-        <span>{name.toUpperCase()}</span>
-      </div>
-      <div className="card-chip" />
-      <div className="card-bottom">
-        <strong>EXPERIENCE MALAYSIA</strong>
-        <span>TOURIST PASS · 2026</span>
+      <div className="card-face">
+        <Image
+          className="card-art"
+          src="/malaysia-card-front.webp"
+          alt={`${name} Malaysia Experience Card`}
+          fill
+          sizes="(max-width:640px) 260px, (max-width:1024px) 340px, 540px"
+        />
+        <div className="card-tint" />
+        <div className="card-shine" />
       </div>
     </div>
   );

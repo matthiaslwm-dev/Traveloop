@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { Icon, StarbucksLogo } from "../components/Icons";
+import { Icon } from "../components/Icons";
 import { partners, partnerCategories, type PartnerCategory } from "../data/partners";
 
 const filters: Array<PartnerCategory | "All"> = ["All", ...partnerCategories];
@@ -57,8 +58,14 @@ export default function PartnersPage() {
               filteredPartners.map((p) => (
                 <article className="partner-directory-card" key={p.name}>
                   <div className="partner-directory-top">
-                    <span className="partner-directory-icon">
-                      {p.logo === "starbucks" ? <StarbucksLogo /> : <Icon name={p.icon!} />}
+                    <span className="partner-directory-logo">
+                      <Image
+                        src={p.logo}
+                        alt={p.name}
+                        width={140}
+                        height={96}
+                        sizes="140px"
+                      />
                     </span>
                     <span className="partner-directory-category">{p.category}</span>
                   </div>
@@ -70,6 +77,9 @@ export default function PartnersPage() {
                     </span>
                   )}
                   <span className="partner-directory-deal">{p.deal}</span>
+                  {p.terms && (
+                    <span className="partner-directory-terms">{p.terms}</span>
+                  )}
                 </article>
               ))
             )}

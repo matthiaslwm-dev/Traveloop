@@ -414,34 +414,46 @@ h1,h2,h3 { margin-top: 0; }
 .partners-marquee:hover .partners-track { animation-play-state:paused; }
 .partner-card-mini { flex:0 0 auto; width:196px; display:flex; flex-direction:column; align-items:center; text-align:center; gap:9px; padding:24px 18px; border-radius:20px; background:white; border:1px solid var(--line); box-shadow:0 10px 30px rgba(8,25,50,.05); transition:transform .3s ease, box-shadow .3s ease; }
 .partner-card-mini:hover { transform:translateY(-4px); box-shadow:0 18px 42px rgba(8,25,50,.11); }
-.partner-card-mini-icon { flex:none; display:grid; place-items:center; width:52px; height:52px; border-radius:50%; background:rgba(36,71,152,.08); color:var(--blue); }
-.partner-card-mini-icon svg { width:24px; height:24px; }
+.partner-card-mini-logo { flex:none; display:grid; place-items:center; width:100%; height:60px; }
+.partner-card-mini-logo img { width:auto; height:auto; max-width:100%; max-height:60px; object-fit:contain; }
 .partner-card-mini-name { font-family:var(--font-sora), sans-serif; font-size:13px; font-weight:700; letter-spacing:-.01em; color:var(--ink); line-height:1.35; }
 .partner-card-mini-deal { font-size:11.5px; font-weight:700; letter-spacing:.01em; color:var(--red); }
 @keyframes partnersScroll { from { transform:translateX(0); } to { transform:translateX(-50%); } }
 
-.pass-card { position:relative;width:min(540px,44vw);aspect-ratio:1.58;border-radius:30px;padding:34px;background:linear-gradient(135deg,#2a54b3 0%,#193a86 45%,#071b3a 100%);box-shadow:0 45px 100px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.3);overflow:hidden;transform-style:preserve-3d;transition:transform .15s ease; }
-.pass-card:before { content:"";position:absolute;inset:0;background:radial-gradient(circle at 70% 10%,rgba(255,255,255,.28),transparent 35%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='.12'%3E%3Cpath d='M15 60c15-25 30-25 45 0s30 25 45 0'/%3E%3Cpath d='M60 15c-25 15-25 30 0 45s25 30 0 45'/%3E%3C/g%3E%3C/svg%3E"); }
-.pass-card:after { content:"";position:absolute;width:230px;height:230px;border:2px solid rgba(255,255,255,.15);border-radius:50%;right:-70px;bottom:-80px;box-shadow:0 0 0 28px rgba(255,255,255,.04),0 0 0 56px rgba(255,255,255,.025); }
-.card-shine { position:absolute;inset:-100%;background:linear-gradient(110deg,transparent 44%,rgba(255,255,255,.24) 50%,transparent 56%);animation:shine 5s infinite; }
+.pass-card {
+  position:relative; width:min(540px,44vw); aspect-ratio:1.586; border-radius:26px;
+  /* the frame is the tier: a metal edge printed around the artwork */
+  padding:9px; background:var(--tier-frame); overflow:hidden;
+  box-shadow:0 45px 100px rgba(0,0,0,.38), 0 0 0 1px var(--tier-edge), inset 0 1px 0 rgba(255,255,255,.55);
+  transform-style:preserve-3d; transition:transform .15s ease;
+}
+/* isolate: the tint below blends with the artwork, never with the page behind it */
+.card-face { position:relative; height:100%; border-radius:18px; overflow:hidden; isolation:isolate; background:#fff; }
+.card-art { object-fit:cover; object-position:center; }
+.card-tint { position:absolute; inset:0; background:var(--tier-tint); mix-blend-mode:multiply; pointer-events:none; }
+.card-shine { position:absolute; inset:-100%; background:linear-gradient(110deg,transparent 44%,rgba(255,255,255,.5) 50%,transparent 56%); animation:shine 5s infinite; pointer-events:none; }
 @keyframes shine { 0%,55%{transform:translateX(-35%)}100%{transform:translateX(35%)} }
-.card-top,.card-bottom { position:relative;z-index:2;display:flex;justify-content:space-between;align-items:flex-start; }
-.card-top img { width:180px;height:auto;filter:brightness(0) invert(1); }
-.card-top span { font-size:10px;letter-spacing:.2em;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:8px 11px; }
-.card-chip { position:relative;z-index:2;width:52px;height:39px;border-radius:8px;background:linear-gradient(135deg,#f5d98b,#b9953e);margin-top:54px;box-shadow:inset 0 0 0 1px rgba(80,55,5,.2); }
-.card-bottom { position:absolute;left:34px;right:34px;bottom:30px;align-items:end; }
-.card-bottom strong { font-size:13px;letter-spacing:.12em; }
-.card-bottom span { font-size:9px;letter-spacing:.12em;opacity:.65; }
 .pass-caption { text-align:center;color:rgba(255,255,255,.38);font-size:10px;letter-spacing:.1em;text-transform:uppercase;margin-top:20px; }
 .pass-caption span { color:white; }
 .tier-preview-card .pass-caption { color:var(--muted); }
 .tier-preview-card .pass-caption span { color:var(--ink); }
 
-.pass-card.tier-silver { background:linear-gradient(135deg,#f4f6f9 0%,#d7dce4 45%,#aab2c0 100%); color:var(--ink); }
-.pass-card.tier-gold { background:linear-gradient(135deg,#f8e3ac 0%,#dfae4c 45%,#a9781f 100%); color:#3d2c05; }
-.pass-card.tier-platinum { background:linear-gradient(135deg,#3c3f45 0%,#202225 45%,#050506 100%); color:#fff; }
-.pass-card.tier-silver .card-top img, .pass-card.tier-gold .card-top img { filter:none; }
-.pass-card.tier-silver .card-top span, .pass-card.tier-gold .card-top span { border-color:rgba(16,26,44,.25); }
+/* Frame and wash per tier — matched to the printed Silver/Gold/Platinum cards. */
+.pass-card.tier-silver {
+  --tier-frame:linear-gradient(135deg,#ffffff 0%,#d3d9e2 17%,#8f98a6 40%,#f0f3f7 56%,#a9b1bd 76%,#79818f 100%);
+  --tier-edge:rgba(104,113,128,.55);
+  --tier-tint:linear-gradient(150deg,rgba(228,233,241,.55),rgba(183,192,206,.5));
+}
+.pass-card.tier-gold {
+  --tier-frame:linear-gradient(135deg,#fff7dd 0%,#f0d183 16%,#c79829 40%,#fdf1c6 56%,#dfae4c 76%,#a97c1d 100%);
+  --tier-edge:rgba(150,110,25,.5);
+  --tier-tint:linear-gradient(150deg,rgba(255,243,211,.4),rgba(233,199,124,.4));
+}
+.pass-card.tier-platinum {
+  --tier-frame:linear-gradient(135deg,#f4fbff 0%,#a9dcfb 16%,#3ea3e6 40%,#eaf7ff 56%,#67c1f0 76%,#1f7fc4 100%);
+  --tier-edge:rgba(31,127,196,.5);
+  --tier-tint:linear-gradient(150deg,rgba(228,244,255,.5),rgba(150,205,240,.5));
+}
 
 /* ---------- FAQ ---------- */
 .faq-section { position:relative; overflow:hidden; padding: clamp(110px,12vw,170px) clamp(24px,7vw,110px); background:var(--red); }
@@ -603,12 +615,13 @@ a.contact-card:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(8
 .partner-directory-card { position:relative; display:flex; flex-direction:column; gap:10px; padding:26px; border-radius:24px; background:#fff; border:1px solid var(--line); box-shadow:0 12px 32px rgba(8,25,50,.06); transition:transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s ease, border-color .3s ease; }
 .partner-directory-card:hover { transform:translateY(-5px); border-color:rgba(36,71,152,.28); box-shadow:0 22px 48px rgba(8,25,50,.13); }
 .partner-directory-top { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:4px; }
-.partner-directory-icon { flex:none; display:grid; place-items:center; width:54px; height:54px; border-radius:18px; background:linear-gradient(150deg, rgba(36,71,152,.12), rgba(36,71,152,.05)); color:var(--blue); transition:transform .3s cubic-bezier(.2,.7,.2,1); }
-.partner-directory-card:hover .partner-directory-icon { transform:scale(1.06) rotate(-3deg); }
-.partner-directory-icon svg { width:26px; height:26px; }
+.partner-directory-logo { flex:none; display:grid; place-items:center; width:96px; height:64px; transition:transform .3s cubic-bezier(.2,.7,.2,1); }
+.partner-directory-card:hover .partner-directory-logo { transform:scale(1.06); }
+.partner-directory-logo img { width:auto; height:auto; max-width:96px; max-height:64px; object-fit:contain; }
 .partner-directory-name { font-family:var(--font-sora),sans-serif; font-size:16px; letter-spacing:-.02em; line-height:1.3; color:var(--ink); }
 .partner-directory-category { padding:5px 10px; border-radius:999px; background:var(--cream); font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
 .partner-directory-deal { display:inline-flex; align-items:center; margin-top:auto; padding:7px 13px; border-radius:999px; background:rgba(215,41,54,.09); color:var(--red); font-size:11.5px; font-weight:700; width:fit-content; }
+.partner-directory-terms { font-size:11px; line-height:1.45; color:var(--muted); }
 .partner-directory-location { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:var(--muted); }
 .partner-directory-location svg { width:13px; height:13px; flex:none; }
 .partner-directory-empty { grid-column:1/-1; text-align:center; padding:60px 20px; color:var(--muted); font-size:14px; }
@@ -819,18 +832,13 @@ a.contact-card:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(8
 .pass-stack:hover .pass-stack-1:hover { transform:translate(-23%,-37%) rotate(-9deg) scale(1.08); }
 .pass-stack:hover .pass-stack-2:hover { transform:translate(23%,37%) rotate(8deg) scale(1.08); }
 .pass-stack:hover .pass-stack-3:hover { transform:rotate(-2deg) scale(1.09); }
-/* on a light background the near-black card shadow is too heavy */
-.pass-stack-light .pass-card { box-shadow:0 22px 45px rgba(8,25,50,.28), inset 0 1px 0 rgba(255,255,255,.3); }
+/* Shared scaled-down pass card — the frame and its radii shrink with the card */
+.pass-stack .pass-card, .pricing-visual .pass-card { width:100%; padding:6px; border-radius:17px; box-shadow:0 26px 55px rgba(0,0,0,.32), 0 0 0 1px var(--tier-edge), inset 0 1px 0 rgba(255,255,255,.55); }
+.pass-stack .card-face, .pricing-visual .card-face { border-radius:12px; }
 
-/* Shared scaled-down pass card */
-.pass-stack .pass-card, .pricing-visual .pass-card { width:100%; padding:22px; border-radius:22px; box-shadow:0 26px 55px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.3); }
-.pass-stack .pass-card:after, .pricing-visual .pass-card:after { width:150px; height:150px; right:-50px; bottom:-56px; box-shadow:0 0 0 18px rgba(255,255,255,.04),0 0 0 36px rgba(255,255,255,.025); }
-.pass-stack .card-top img, .pricing-visual .card-top img { width:112px; height:auto; }
-.pass-stack .card-top span, .pricing-visual .card-top span { font-size:8px; letter-spacing:.16em; padding:5px 9px; }
-.pass-stack .card-chip, .pricing-visual .card-chip { width:34px; height:26px; margin-top:26px; border-radius:6px; }
-.pass-stack .card-bottom, .pricing-visual .card-bottom { left:22px; right:22px; bottom:18px; }
-.pass-stack .card-bottom strong, .pricing-visual .card-bottom strong { font-size:9.5px; letter-spacing:.1em; }
-.pass-stack .card-bottom span, .pricing-visual .card-bottom span { font-size:7px; }
+/* on a light background the near-black card shadow is too heavy (after the
+   shared rule above, which sets box-shadow at the same specificity) */
+.pass-stack-light .pass-card { box-shadow:0 22px 45px rgba(8,25,50,.22), 0 0 0 1px var(--tier-edge), inset 0 1px 0 rgba(255,255,255,.55); }
 
 /* Pricing cards */
 /* stretch (not start) so every card matches the tallest and the CTAs line up */
@@ -841,7 +849,7 @@ a.contact-card:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(8
 .pricing-card { background-repeat:no-repeat; background-size:100% 5px; background-position:top center; }
 .pricing-card.accent-silver { background-image:linear-gradient(90deg,#e3e7ee,#aab2c0); }
 .pricing-card.accent-gold { background-image:linear-gradient(90deg,#f8e3ac,#dfae4c); }
-.pricing-card.accent-platinum { background-image:linear-gradient(90deg,#4a4d54,#0b0b0d); }
+.pricing-card.accent-platinum { background-image:linear-gradient(90deg,#a9dcfb,#1f7fc4); }
 .pricing-card.popular { border-color:rgba(36,71,152,.35); box-shadow:0 30px 70px rgba(36,71,152,.2); transform:translateY(-12px); }
 .pricing-card.popular:hover { transform:translateY(-18px); }
 .pricing-badge { position:absolute; top:-15px; left:50%; transform:translateX(-50%); background:var(--blue); color:#fff; font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; padding:8px 18px; border-radius:999px; box-shadow:0 10px 24px rgba(36,71,152,.35); white-space:nowrap; }
@@ -1002,10 +1010,6 @@ a.contact-card:hover { transform:translateY(-3px); box-shadow:0 18px 40px rgba(8
   .benefit-card { min-height:500px; }
   .partners { margin-top:80px; }
   .partner-chip { height:54px;padding:0 22px;font-size:13px; }
-  .card-top img { width:120px; height:auto; }
-  .card-chip { margin-top:35px; }
-  .card-bottom { left:22px;right:22px;bottom:20px; }
-  .card-bottom span { display:none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

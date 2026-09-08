@@ -2,9 +2,21 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Refreshes the Supabase auth cookie and gates /admin and /account behind a
- * logged-in session. Runs in proxy.ts (this Next.js version's renamed
- * middleware).
+ * Urban Sprint pages anyone may see without signing in. The campaign leans on
+ * its leaderboard being public, so the board and the landing page that
+ * previews it are deliberately open, as is the pulse endpoint they poll.
+ */
+const URBAN_SPRINT_PUBLIC = [
+  "/urban-sprint",
+  "/urban-sprint/leaderboard",
+  "/urban-sprint/login",
+  "/urban-sprint/api/pulse",
+];
+
+/**
+ * Refreshes the Supabase auth cookie and gates /admin, /account and the
+ * signed-in half of /urban-sprint behind a logged-in session. Runs in proxy.ts
+ * (this Next.js version's renamed middleware).
  */
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -52,6 +64,22 @@ export async function updateSession(request: NextRequest) {
       const adminUrl = request.nextUrl.clone();
       adminUrl.pathname = "/admin";
       return NextResponse.redirect(adminUrl);
+    }
+  }
+
+  // Urban Sprint is a separate product with its own roles, so "signed in" is
+  // all that is checked here. *Which* Urban Sprint role a page needs is
+  // decided by requireRole() in the page or action that serves the data —
+  // proxy is the optimistic check, not the authorisation.
+  if (pathname.startsWith("/urban-sprint")) {
+    const isPublic = URBAN_SPRINT_PUBLIC.includes(pathname);
+
+    if (!user && !isPublic) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = "/urban-sprint/login";
+      // So a deep link survives the detour through the login form.
+      loginUrl.searchParams.set("next", pathname);
+      return NextResponse.redirect(loginUrl);
     }
   }
 

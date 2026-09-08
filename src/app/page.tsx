@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import { Icon, StarbucksLogo } from "./components/Icons";
+import { Icon } from "./components/Icons";
 import { partners } from "./data/partners";
 import { passTiers as tierShowcase } from "./data/passes";
 import { PassStack } from "./components/PassCard";
@@ -604,12 +604,14 @@ export default function Home() {
               <div className="partners-track">
                 {[...partners, ...partners].map((p, i) => (
                   <div className="partner-card-mini" key={`${p.name}-${i}`}>
-                    <span className="partner-card-mini-icon">
-                      {p.logo === "starbucks" ? (
-                        <StarbucksLogo />
-                      ) : (
-                        <Icon name={p.icon!} />
-                      )}
+                    <span className="partner-card-mini-logo">
+                      <Image
+                        src={p.logo}
+                        alt={p.name}
+                        width={128}
+                        height={88}
+                        sizes="128px"
+                      />
                     </span>
                     <span className="partner-card-mini-name">{p.name}</span>
                     <span className="partner-card-mini-deal">{p.deal}</span>

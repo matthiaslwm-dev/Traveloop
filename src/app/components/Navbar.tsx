@@ -16,6 +16,7 @@ const navItems = [
   { href: "/about", label: "About" },
   { href: "/partners", label: "Partners" },
   { href: "/blogs", label: "Blogs" },
+  { href: "/urban-sprint", label: "Urban Sprint" },
   { href: "/contact", label: "Contact" },
 ] as const;
 
@@ -84,6 +85,7 @@ export default function Navbar({ forceScrolled = false }: { forceScrolled?: bool
         <Link href="/about">About</Link>
         <Link href="/partners">Partners</Link>
         <Link href="/blogs">Blogs</Link>
+        <Link href="/urban-sprint">Urban Sprint</Link>
         <Link href="/contact">Contact</Link>
       </nav>
       <div
